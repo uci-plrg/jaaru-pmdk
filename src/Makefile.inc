@@ -87,11 +87,11 @@ $(error $(arch32_error_msg))
 endif
 
 ifeq ($(DEBUG),1)
-CFLAGS += -O0 -ggdb -DDEBUG
+CFLAGS += -O0 -g -ggdb -DDEBUG
 LIB_SUBDIR = /nvml_debug
 OBJDIR = debug
 else
-CFLAGS += -O0 -U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=2
+CFLAGS += -O0 -g -U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=2
 LIB_SUBDIR =
 OBJDIR = nondebug
 endif

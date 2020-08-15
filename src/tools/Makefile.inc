@@ -54,7 +54,7 @@ CFLAGS += -fno-common
 CFLAGS += $(EXTRA_CFLAGS)
 
 ifeq ($(DEBUG),)
-CFLAGS += -O0 -D_FORTIFY_SOURCE=2
+CFLAGS += -O0 -g -D_FORTIFY_SOURCE=2
 else
 CFLAGS += -ggdb
 endif
