@@ -45,7 +45,7 @@ $(info NOTE: Skipping pminvaders and pminvaders2 because ncurses is missing \
 -- see src/examples/libpmemobj/pminvaders/README for details.)
 endif
 
-LIBS = -lpmemobj -lpmem -pthread
+LIBS = -lpmemobj -pthread
 
 ifeq ($(NCURSES),y)
 LIBS += $(shell $(PKG_CONFIG) --libs ncurses)

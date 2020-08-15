@@ -59,7 +59,7 @@ clean-progs: clean-links
 include ../../Makefile.inc
 
 
-LIBS += -lpmemobj -lpmem -pthread
+LIBS += -lpmemobj -pthread
 
 ifeq ($(FUSE), y)
 LIBS += $(shell $(PKG_CONFIG) --libs fuse)

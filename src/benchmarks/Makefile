@@ -97,7 +97,7 @@ OBJS=$(SRC:.c=.o)
 LDFLAGS = -L$(LIBS_PATH)
 LDFLAGS += -L../examples/libpmemobj/map
 LDFLAGS += $(EXTRA_LDFLAGS)
-LIBS += -lpmemobj -lpmemlog -lpmemblk -lpmem -lvmem -pthread -lm
+LIBS += -lpmemobj -lpmemlog -lpmemblk -lvmem -pthread -lm
 ifeq ($(call check_librt), n)
 LIBS += -lrt
 endif

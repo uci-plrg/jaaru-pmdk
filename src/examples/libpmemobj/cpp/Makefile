@@ -31,7 +31,7 @@
 #
 PROGS = queue
 
-LIBS = -lpmemobj -lpmem -pthread
+LIBS = -lpmemobj -pthread
 
 COMPILE_LANG = cpp
 include ../../Makefile.inc

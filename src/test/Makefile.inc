@@ -65,7 +65,7 @@ LIBS += -L$(LIBS_DIR)/debug
 LIBS += -pthread
 
 ifeq ($(LIBPMEMBLK), y)
-DYNAMIC_LIBS += -lpmemblk
+#DYNAMIC_LIBS += -lpmemblk
 STATIC_DEBUG_LIBS += $(LIBS_DIR)/debug/libpmemblk.a
 STATIC_NONDEBUG_LIBS += $(LIBS_DIR)/nondebug/libpmemblk.a
 endif

@@ -43,7 +43,7 @@ ifeq ($(call check_cxx_flags, -std=c++11), y)
 DIRS += cpp
 endif
 
-LIBS = -lpmemobj -lpmem -pthread -lm -pthread
+LIBS = -lpmemobj -pthread -lm -pthread
 
 include ../Makefile.inc
 

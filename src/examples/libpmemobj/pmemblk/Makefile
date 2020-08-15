@@ -35,7 +35,7 @@
 #
 PROGS = obj_pmemblk
 
-LIBS = -lpmemobj -lpmem -pthread
+LIBS = -lpmemobj -pthread
 
 include ../../Makefile.inc
 
