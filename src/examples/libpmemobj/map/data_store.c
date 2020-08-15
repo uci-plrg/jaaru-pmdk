@@ -70,10 +70,10 @@ struct store_root {
  * new_store_item -- transactionally creates and initializes new item
  */
 TOID(struct store_item)
-new_store_item()
+new_store_item(uint64_t key)
 {
 	TOID(struct store_item) item = TX_NEW(struct store_item);
-	D_RW(item)->item_data = rand();
+	D_RW(item)->item_data = key * 2; // Instead of creating random variable.
 
 	return item;
 }
@@ -147,7 +147,11 @@ int main(int argc, const char *argv[]) {
 	}
 
 	PMEMobjpool *pop;
-	srand(time(NULL));
+	//srand(time(NULL));
+	uint64_t *keys = malloc( sizeof(uint64_t) *nops);
+	for(int i=0; i< nops; i++){
+		keys[i] = i + 1;
+	}
 
 	if (access(path, F_OK) != 0) {
 		if ((pop = pmemobj_create(path, POBJ_LAYOUT_NAME(data_store),
@@ -181,8 +185,8 @@ int main(int argc, const char *argv[]) {
 
 		for (int i = 0; i < nops; ++i) {
 			/* new_store_item is transactional! */
-			map_insert(mapc, D_RW(root)->map, rand(),
-					new_store_item().oid);
+			map_insert(mapc, D_RW(root)->map, keys[i],
+					new_store_item(keys[i]).oid);
 		}
 	} TX_ONABORT {
 		perror("transaction aborted\n");
