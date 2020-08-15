@@ -43,7 +43,7 @@ INCS += -I../include -I../common/
 
 CFLAGS += -std=gnu99
 CFLAGS += -Wall
-CFLAGS += -Werror
+#CFLAGS += -Werror
 CFLAGS += -Wmissing-prototypes
 CFLAGS += -Wpointer-arith
 CFLAGS += -Wunused-macros
@@ -91,7 +91,7 @@ CFLAGS += -O0 -ggdb -DDEBUG
 LIB_SUBDIR = /nvml_debug
 OBJDIR = debug
 else
-CFLAGS += -O2 -U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=2
+CFLAGS += -O0 -U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=2
 LIB_SUBDIR =
 OBJDIR = nondebug
 endif

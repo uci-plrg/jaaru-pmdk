@@ -32,7 +32,8 @@
 #
 
 TOP := $(dir $(lastword $(MAKEFILE_LIST)))..
-
+CC=/scratch/nvm/benchmarks/gcc
+CXX=/scratch/nvm/benchmarks/g++
 LN = ln
 OBJCOPY = objcopy
 MKDIR = mkdir

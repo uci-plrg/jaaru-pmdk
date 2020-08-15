@@ -167,7 +167,7 @@ struct obj_tx_bench {
 	 *	-realloc_op
 	 */
 	fn_op *fn_op;
-} obj_bench;
+} obj_tx_bench;
 
 /*
  * item -- TOID's structure
@@ -382,7 +382,7 @@ alloc_dram(struct obj_tx_bench *obj_bench, struct worker_info *worker,
 	return 0;
 }
 
-/*
+/*sdf
  * alloc_pmem -- main operations for obj_tx_alloc benchmark in pmem mode
  */
 static int
@@ -1023,24 +1023,24 @@ obj_tx_init(struct benchmark *bench, struct benchmark_args *args)
 	assert(args != NULL);
 	assert(args->opts != NULL);
 
-	pmembench_set_priv(bench, &obj_bench);
+	pmembench_set_priv(bench, &obj_tx_bench);
 
-	obj_bench.obj_args = args->opts;
-	obj_bench.obj_args->obj_size = args->dsize;
-	obj_bench.obj_args->n_ops = args->n_ops_per_thread;
-	obj_bench.n_objs = args->n_ops_per_thread;
+	obj_tx_bench.obj_args = args->opts;
+	obj_tx_bench.obj_args->obj_size = args->dsize;
+	obj_tx_bench.obj_args->n_ops = args->n_ops_per_thread;
+	obj_tx_bench.n_objs = args->n_ops_per_thread;
 
-	obj_bench.lib_op = obj_bench.obj_args->lib != NULL ?
-				parse_lib_mode(obj_bench.obj_args->lib) :
+	obj_tx_bench.lib_op = obj_tx_bench.obj_args->lib != NULL ?
+				parse_lib_mode(obj_tx_bench.obj_args->lib) :
 				LIB_MODE_OBJ_ATOMIC;
 
-	if (obj_bench.lib_op == LIB_MODE_UNKNOWN)
+	if (obj_tx_bench.lib_op == LIB_MODE_UNKNOWN)
 			return -1;
 
-	obj_bench.lib_mode = obj_bench.lib_op == LIB_MODE_DRAM ?
+	obj_tx_bench.lib_mode = obj_tx_bench.lib_op == LIB_MODE_DRAM ?
 				LIB_MODE_DRAM : LIB_MODE_OBJ_ATOMIC;
 
-	obj_bench.nesting_mode = obj_bench.lib_op == LIB_MODE_OBJ_TX ?
+	obj_tx_bench.nesting_mode = obj_tx_bench.lib_op == LIB_MODE_OBJ_TX ?
 					NESTING_MODE_TX : NESTING_MODE_SIM;
 
 	/*
@@ -1048,8 +1048,8 @@ obj_tx_init(struct benchmark *bench, struct benchmark_args *args)
 	 * as the actual size of the allocated persistent objects
 	 * is always larger than requested.
 	 */
-	size_t dsize = obj_bench.obj_args->rsize > args->dsize ?
-					obj_bench.obj_args->rsize : args->dsize;
+	size_t dsize = obj_tx_bench.obj_args->rsize > args->dsize ?
+					obj_tx_bench.obj_args->rsize : args->dsize;
 	size_t psize = args->n_ops_per_thread *
 		(dsize + ALLOC_OVERHEAD) * args->n_threads;
 
@@ -1061,35 +1061,35 @@ obj_tx_init(struct benchmark *bench, struct benchmark_args *args)
 	 * When adding all allocated objects to undo log there is necessary
 	 * to prepare larger pool to prevent out of memory error.
 	 */
-	if (obj_bench.op_mode == OP_MODE_ALL_OBJ ||
-				obj_bench.op_mode == OP_MODE_ALL_OBJ_NESTED)
+	if (obj_tx_bench.op_mode == OP_MODE_ALL_OBJ ||
+				obj_tx_bench.op_mode == OP_MODE_ALL_OBJ_NESTED)
 		psize +=  psize * FACTOR;
 
-	obj_bench.op_mode = parse_op[obj_bench.obj_args->parse_mode](
-						obj_bench.obj_args->operation);
-	if (obj_bench.op_mode == OP_MODE_UNKNOWN) {
+	obj_tx_bench.op_mode = parse_op[obj_tx_bench.obj_args->parse_mode](
+						obj_tx_bench.obj_args->operation);
+	if (obj_tx_bench.op_mode == OP_MODE_UNKNOWN) {
 		fprintf(stderr, "operation mode unknown\n");
 		return -1;
 	}
 
-	obj_bench.type_mode = parse_type_num_mode(obj_bench.obj_args->type_num);
-	if (obj_bench.type_mode == NUM_MODE_UNKNOWN)
+	obj_tx_bench.type_mode = parse_type_num_mode(obj_tx_bench.obj_args->type_num);
+	if (obj_tx_bench.type_mode == NUM_MODE_UNKNOWN)
 		return -1;
 
-	obj_bench.fn_type_num = type_num_fn[obj_bench.type_mode];
-	if (obj_bench.type_mode == NUM_MODE_RAND) {
-		obj_bench.random_types = rand_values(1, UINT32_MAX,
+	obj_tx_bench.fn_type_num = type_num_fn[obj_tx_bench.type_mode];
+	if (obj_tx_bench.type_mode == NUM_MODE_RAND) {
+		obj_tx_bench.random_types = rand_values(1, UINT32_MAX,
 				args->n_ops_per_thread);
-			if (obj_bench.random_types == NULL)
+			if (obj_tx_bench.random_types == NULL)
 				return -1;
 	}
-	obj_bench.sizes = rand_values(obj_bench.obj_args->min_size,
-						obj_bench.obj_args->obj_size,
+	obj_tx_bench.sizes = rand_values(obj_tx_bench.obj_args->min_size,
+						obj_tx_bench.obj_args->obj_size,
 						args->n_ops_per_thread);
-	if (obj_bench.sizes == NULL)
+	if (obj_tx_bench.sizes == NULL)
 		goto free_random_types;
 
-	if (obj_bench.lib_mode == LIB_MODE_DRAM)
+	if (obj_tx_bench.lib_mode == LIB_MODE_DRAM)
 		return 0;
 
 	/* Create pmemobj pool. */
@@ -1101,19 +1101,19 @@ obj_tx_init(struct benchmark *bench, struct benchmark_args *args)
 
 		psize = 0;
 	}
-	obj_bench.pop = pmemobj_create(args->fname, LAYOUT_NAME,
+	obj_tx_bench.pop = pmemobj_create(args->fname, LAYOUT_NAME,
 						psize, args->fmode);
-	if (obj_bench.pop == NULL) {
+	if (obj_tx_bench.pop == NULL) {
 		perror("pmemobj_create");
 		goto free_all;
 	}
 
 	return 0;
 free_all:
-	free(obj_bench.sizes);
+	free(obj_tx_bench.sizes);
 free_random_types:
-	if (obj_bench.type_mode == NUM_MODE_RAND)
-		free(obj_bench.random_types);
+	if (obj_tx_bench.type_mode == NUM_MODE_RAND)
+		free(obj_tx_bench.random_types);
 	return -1;
 }
 

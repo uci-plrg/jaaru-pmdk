@@ -40,7 +40,7 @@ INCS += -I.
 INCS += -I$(TOP)/src/include
 CFLAGS += -std=gnu99
 CFLAGS += -Wall
-CFLAGS += -Werror
+#CFLAGS += -Werror
 CFLAGS += -Wmissing-prototypes
 CFLAGS += -Wpointer-arith
 CFLAGS += -Wunused-macros
@@ -54,7 +54,7 @@ CFLAGS += -fno-common
 CFLAGS += $(EXTRA_CFLAGS)
 
 ifeq ($(DEBUG),)
-CFLAGS += -O2 -D_FORTIFY_SOURCE=2
+CFLAGS += -O0 -D_FORTIFY_SOURCE=2
 else
 CFLAGS += -ggdb
 endif

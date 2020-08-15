@@ -125,7 +125,7 @@ LIBMAP=$(LIBMAP_DIR)/libmap.a
 OBJS += pmemobj.o
 
 ifeq ($(DEBUG),)
-CFLAGS += -O3
+CFLAGS += -O0
 LIBS_PATH=../nondebug
 else
 CFLAGS += -ggdb
