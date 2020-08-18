@@ -659,7 +659,7 @@ pmemobj_runtime_init(PMEMobjpool *pop, int rdonly, int boot)
 	 * The prototype PMFS doesn't allow this when large pages are in
 	 * use. It is not considered an error if this fails.
 	 */
-	util_range_none(pop->addr, sizeof (struct pool_hdr));
+	// util_range_none(pop->addr, sizeof (struct pool_hdr));
 
 	return 0;
 }

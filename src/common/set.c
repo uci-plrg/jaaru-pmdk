@@ -95,7 +95,8 @@ struct suff {
 	uint64_t mag;
 };
 
-extern void * pmdk_malloc(size_t size);
+extern void *pmdk_malloc(size_t size);
+extern void *pmdk_pagealigned_calloc(size_t size);
 extern void pmem_register_file(const char *path, void * addr);
 
 /*
@@ -724,8 +725,8 @@ util_poolset_parse(const char *path, int fd, struct pool_set **setp)
  */
 static int util_poolset_create(struct pool_set **setp, const char *path, size_t poolsize, size_t minsize)
 {
-	struct pool_set *set = (struct pool_set *)pmdk_malloc(sizeof (struct pool_set) + sizeof (struct pool_replica *));
-	struct pool_replica *rep= (struct pool_replica *) pmdk_malloc(sizeof (struct pool_replica) + sizeof (struct pool_set_part));
+	struct pool_set *set = (struct pool_set *)pmdk_pagealigned_calloc(sizeof (struct pool_set) + sizeof (struct pool_replica *));
+	struct pool_replica *rep= (struct pool_replica *) pmdk_pagealigned_calloc(sizeof (struct pool_replica) + sizeof (struct pool_set_part));
 	set->replica[0] = rep;
 
 	rep->part[0].filesize = poolsize;
@@ -1003,16 +1004,14 @@ static int util_replica_create(struct pool_set *set, unsigned repidx, int flags,
 	struct pool_replica *rep = set->replica[repidx];
 	{
 		struct pool_set_part *part = &rep->part[0];
-		part->addr = pmdk_malloc(rep->repsize);
+		part->addr = pmdk_pagealigned_calloc(rep->repsize);
 		part->size = rep->repsize;
 		pmem_flush(part, sizeof(*part));
 		//Header allocation
 		for (unsigned p = 0; p < rep->nparts; p++){
 			struct pool_set_part * partp = &rep->part[p];
 			partp->hdrsize = POOL_HDR_SIZE;
-			partp->hdr = pmdk_malloc(sizeof(POOL_HDR_SIZE));
-			memset(partp->hdr, 0, partp->hdrsize);
-			pmem_flush(partp->hdr, sizeof(POOL_HDR_SIZE));
+			partp->hdr = pmdk_pagealigned_calloc(sizeof(POOL_HDR_SIZE));
 			pmem_flush(partp, sizeof(*partp));
 		}
 	}
