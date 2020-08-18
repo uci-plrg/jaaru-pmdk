@@ -1011,7 +1011,7 @@ static int util_replica_create(struct pool_set *set, unsigned repidx, int flags,
 		for (unsigned p = 0; p < rep->nparts; p++){
 			struct pool_set_part * partp = &rep->part[p];
 			partp->hdrsize = POOL_HDR_SIZE;
-			partp->hdr = pmdk_pagealigned_calloc(sizeof(POOL_HDR_SIZE));
+			partp->hdr = pmdk_pagealigned_calloc(POOL_HDR_SIZE);
 			pmem_flush(partp, sizeof(*partp));
 		}
 	}
