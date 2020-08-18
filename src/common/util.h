@@ -180,7 +180,7 @@ struct pool_set_part {
 	/* populated by a pool set file parser */
 	const char *path;
 	size_t filesize;	/* aligned to page size */
-	int fd;
+	// int fd;
 	int created;		/* indicates newly created (zeroed) file */
 
 	/* util_poolset_open/create */

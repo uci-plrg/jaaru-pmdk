@@ -738,12 +738,12 @@ pmemobj_create(const char *path, const char *layout, size_t poolsize,
 		goto err;
 	}
 
-	if (util_poolset_chmod(set, mode))
-		goto err;
+	// if (util_poolset_chmod(set, mode))
+	// 	goto err;
 
-	util_poolset_fdclose(set);
+	// util_poolset_fdclose(set);
 
-	util_poolset_free(set);
+	// util_poolset_free(set);
 
 	LOG(3, "pop %p", pop);
 
@@ -893,8 +893,8 @@ pmemobj_open_common(const char *path, const char *layout, int cow, int boot)
 		goto err;
 	}
 
-	util_poolset_fdclose(set);
-	util_poolset_free(set);
+	// util_poolset_fdclose(set);
+	// util_poolset_free(set);
 
 #ifdef USE_VG_MEMCHECK
 	if (boot)

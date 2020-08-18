@@ -1478,6 +1478,7 @@ int
 pool_set_file_map_headers(struct pool_set_file *file,
 		int rdonly, size_t hdrsize)
 {
+	assert(0);
 	if (!file->poolset)
 		return -1;
 
@@ -1487,12 +1488,12 @@ pool_set_file_map_headers(struct pool_set_file *file,
 		for (unsigned p = 0; p < rep->nparts; p++) {
 			struct pool_set_part *part = &rep->part[p];
 
-			part->hdr = mmap(NULL, hdrsize, PROT_READ | PROT_WRITE,
-					flags, part->fd, 0);
-			if (part->hdr == MAP_FAILED) {
-				part->hdr = NULL;
-				goto err;
-			}
+			// part->hdr = mmap(NULL, hdrsize, PROT_READ | PROT_WRITE,
+			// 		flags, part->fd, 0);
+			// if (part->hdr == MAP_FAILED) {
+			// 	part->hdr = NULL;
+			// 	goto err;
+			// }
 
 			part->hdrsize = hdrsize;
 		}
