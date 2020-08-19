@@ -58,6 +58,8 @@ POBJ_LAYOUT_END(data_store);
 static uint64_t nkeys;
 static uint64_t keys[MAX_INSERTS];
 
+void jaaru_enable_simulating_crash(void);
+
 struct store_item {
 	uint64_t item_data;
 };
@@ -177,7 +179,8 @@ int main(int argc, const char *argv[]) {
 	/* delete the map if it exists */
 	if (!map_check(mapc, D_RW(root)->map))
 		map_delete(mapc, &D_RW(root)->map);
-
+		
+	jaaru_enable_simulating_crash();
 	/* insert random items in a transaction */
 	int aborted = 0;
 	TX_BEGIN(pop) {
@@ -199,7 +202,7 @@ int main(int argc, const char *argv[]) {
 
 	/* count the items */
 	map_foreach(mapc, D_RW(root)->map, get_keys, NULL);
-
+	assert(nkeys == nops);
 	/* remove the items without outer transaction */
 	for (int i = 0; i < nkeys; ++i) {
 		PMEMoid item = map_remove(mapc, D_RW(root)->map, keys[i]);
