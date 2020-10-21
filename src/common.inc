@@ -5,13 +5,16 @@
 #
 
 TOP := $(dir $(lastword $(MAKEFILE_LIST)))..
-
+CC=/scratch/nvm/benchmarks/gcc
+CXX=/scratch/nvm/benchmarks/g++
 # import user variables
 ifneq ($(wildcard $(TOP)/user.mk),)
 include $(TOP)/user.mk
 endif
 
 LN = ln
+CC=/scratch/nvm/benchmarks/gcc
+CXX=/scratch/nvm/benchmarks/g++
 OBJCOPY ?= objcopy
 MKDIR = mkdir
 INSTALL = install

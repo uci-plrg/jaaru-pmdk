@@ -38,4 +38,4 @@ include ../Makefile.inc
 
 CFLAGS += -DUSE_LIBDL -D_PMEMOBJ_INTRNL $(LIBNDCTL_CFLAGS)
 
-LIBS += -pthread -lpmem $(LIBDL) $(LIBNDCTL_LIBS)
+LIBS += -pthread $(LIBDL) $(LIBNDCTL_LIBS)

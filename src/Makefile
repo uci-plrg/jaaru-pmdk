@@ -8,7 +8,7 @@ TOP := $(dir $(lastword $(MAKEFILE_LIST)))..
 include $(TOP)/src/common.inc
 
 # core targets
-TARGETS = libpmem libpmemblk libpmemlog libpmemobj libpmempool tools
+TARGETS = libpmemblk libpmemlog libpmemobj libpmempool tools
 # make all targets
 ALL_TARGETS = $(TARGETS) common core librpmem libpmem2
 # all available targets
@@ -17,7 +17,7 @@ POSSIBLE_TARGETS = $(TARGETS) common core librpmem rpmem_common test\
 
 SCOPE_DIRS = $(TARGETS) common core librpmem rpmem_common
 
-DEBUG_RELEASE_TARGETS = common core libpmem libpmemblk libpmemlog libpmemobj\
+DEBUG_RELEASE_TARGETS = common core libpmemblk libpmemlog libpmemobj\
 	libpmempool librpmem libpmem2
 RELEASE_TARGETS = tools
 
@@ -39,7 +39,7 @@ SPARSE_TARGETS = $(POSSIBLE_TARGETS)
 EXAMPLES_TARGETS = $(TARGETS) librpmem libpmem2
 
 HEADERS_DESTDIR = $(DESTDIR)$(includedir)
-HEADERS_INSTALL = include/libpmem.h\
+HEADERS_INSTALL = \
 		include/libpmemobj.h include/libpmempool.h\
 		include/libpmemblk.h include/libpmemlog.h
 
@@ -113,7 +113,7 @@ sparse: $(SPARSE_TARGETS:=-sparse)
 
 custom_build = $(DEBUG)$(OBJDIR)
 
-tools: libpmem libpmemblk libpmemlog libpmemobj libpmempool
+tools: libpmemblk libpmemlog libpmemobj libpmempool
 libpmemblk libpmemlog libpmemobj: libpmem
 libpmempool: libpmemblk
 benchmarks test tools: common core

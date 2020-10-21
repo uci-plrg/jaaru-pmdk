@@ -80,7 +80,10 @@
 #define PMEM_FILE_PADDING 6
 #define PMEM_FILE_NAME_MAX_LEN 20
 #define PMEM_FILE_MAX_LEN (PMEM_FILE_NAME_MAX_LEN + PMEM_FILE_PADDING)
+
+//JAARU
 #define PMEM_HINT_ADDR 0x5deadb800000
+void jaaru_set_region(const void *address, size_t size);
 
 
 static RPMEMpool *(*Rpmem_create)(const char *target, const char *pool_set_name,
@@ -410,6 +413,7 @@ util_map_hdr(struct pool_set_part *part, int flags, int rdonly)
 	part->hdrsize = hdrsize;
 	part->hdr = hdrp;
 
+  jaaru_set_region(hdrp, hdrsize);//JAARU
   printf("%p\n", part->addr);
 	VALGRIND_REGISTER_PMEM_MAPPING(part->hdr, part->hdrsize);
 	VALGRIND_REGISTER_PMEM_FILE(part->fd, part->hdr, part->hdrsize, 0);
@@ -479,6 +483,7 @@ util_map_part(struct pool_set_part *part, void *addr, size_t size,
 	part->addr = addrp;
 	part->size = size;
 
+  jaaru_set_region(addrp, size);//JAARU
 	VALGRIND_REGISTER_PMEM_MAPPING(part->addr, part->size);
 	VALGRIND_REGISTER_PMEM_FILE(part->fd, part->addr, part->size, offset);
 
@@ -2673,6 +2678,7 @@ util_replica_map_local(struct pool_set *set, unsigned repidx, int flags)
 			return -1;
 		}
 
+    jaaru_set_region(rep->part[0].addr, rep->part[0].size); //JAARU
 		VALGRIND_REGISTER_PMEM_MAPPING(rep->part[0].addr,
 				rep->part[0].size);
 		VALGRIND_REGISTER_PMEM_FILE(rep->part[0].fd,
@@ -3407,6 +3413,7 @@ util_replica_open_local(struct pool_set *set, unsigned repidx, int flags)
 			return -1;
 		}
 
+    jaaru_set_region(rep->part[0].addr, rep->resvsize);  //JAARU
 		VALGRIND_REGISTER_PMEM_MAPPING(rep->part[0].addr,
 			rep->resvsize);
 		VALGRIND_REGISTER_PMEM_FILE(rep->part[0].fd,

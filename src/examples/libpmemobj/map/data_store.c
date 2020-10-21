@@ -124,7 +124,7 @@ int main(int argc, const char *argv[]) {
 	}
 
 	PMEMobjpool *pop;
-	srand((unsigned)time(NULL));
+  //	srand((unsigned)time(NULL));  JAARU
 
 	if (file_exists(path) != 0) {
 		if ((pop = pmemobj_create(path, POBJ_LAYOUT_NAME(data_store),
