@@ -414,7 +414,6 @@ util_map_hdr(struct pool_set_part *part, int flags, int rdonly)
 	part->hdr = hdrp;
 
   jaaru_set_region(hdrp, hdrsize);//JAARU
-  printf("%p\n", part->addr);
 	VALGRIND_REGISTER_PMEM_MAPPING(part->hdr, part->hdrsize);
 	VALGRIND_REGISTER_PMEM_FILE(part->fd, part->hdr, part->hdrsize, 0);
 
@@ -431,7 +430,6 @@ util_unmap_hdr(struct pool_set_part *part)
 		return;
 
 	LOG(4, "munmap: addr %p size %zu", part->hdr, part->hdrsize);
-  printf("%p\n", part->addr);
 	VALGRIND_REMOVE_PMEM_MAPPING(part->hdr, part->hdrsize);
   if (part->addr == 0)  //JAARU
     if (munmap(part->hdr, part->hdrsize) != 0)

@@ -124,20 +124,20 @@ extern int _Pmreorder_emit;
 #define Pmreorder_emit __builtin_expect(_Pmreorder_emit, 0)
 
 #define VALGRIND_REGISTER_PMEM_MAPPING(addr, len) do {\
-    printf("MAP %s:%d %p %zu\n", __FILE__, __LINE__, addr, (size_t) len); \
+    printf("JAARU MAP %s:%d %p %zu\n", __FILE__, __LINE__, addr, (size_t) len); \
 if (On_valgrind)                                        \
 		VALGRIND_PMC_REGISTER_PMEM_MAPPING((addr), (len));\
 } while (0)
 
 #define VALGRIND_REGISTER_PMEM_FILE(desc, base_addr, size, offset) do {\
-    printf("MAPREG %s:%d %p %zu OF=%zu\n", __FILE__, __LINE__, base_addr, (size_t) size, (size_t)offset); \
+    printf("JAARU MAPREG %s:%d %p %zu OF=%zu\n", __FILE__, __LINE__, base_addr, (size_t) size, (size_t)offset); \
 if (On_valgrind)                                                 \
 		VALGRIND_PMC_REGISTER_PMEM_FILE((desc), (base_addr), (size), \
 		(offset));\
 } while (0)
 
 #define VALGRIND_REMOVE_PMEM_MAPPING(addr, len) do {\
-    printf("UNMAP %s:%d %p %zu\n", __FILE__, __LINE__, addr, (size_t) len); \
+    printf("JAARU UNMAP %s:%d %p %zu\n", __FILE__, __LINE__, addr, (size_t) len); \
 if (On_valgrind)                                      \
 		VALGRIND_PMC_REMOVE_PMEM_MAPPING((addr), (len));\
 } while (0)
