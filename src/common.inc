@@ -354,7 +354,7 @@ LIBDL=-ldl
 LIBUTIL=
 LIBUUID=
 
-NDCTL_ENABLE ?= y
+NDCTL_ENABLE ?= n
 
 # Detect libndctl if not disabled.
 ifeq ($(NDCTL_ENABLE),y)
