@@ -64,6 +64,10 @@ btree_map_create(PMEMobjpool *pop, TOID(struct btree_map) *map, void *arg)
 static void
 btree_map_clear_node(TOID(struct tree_map_node) node)
 {
+	//JAARU BUGFIX START
+	if (TOID_IS_NULL(node))
+		return;
+	//JAARU BUGFIX END
 	for (int i = 0; i < D_RO(node)->n; ++i) {
 		btree_map_clear_node(D_RO(node)->slots[i]);
 	}
