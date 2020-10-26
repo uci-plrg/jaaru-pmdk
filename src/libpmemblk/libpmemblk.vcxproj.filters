@@ -66,16 +66,13 @@
     <ClCompile Include="..\common\shutdown_state.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\common\os_dimm_windows.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\common\os_deep_windows.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\common\badblock.c">
+    <ClCompile Include="..\common\set_badblocks.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\common\badblock_none.c">
+    <ClCompile Include="..\common\bad_blocks.c">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\common\ctl.c">
@@ -100,6 +97,12 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\libpmem2\config.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\libpmem2\badblocks.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\libpmem2\badblocks_none.c">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\libpmem2\source.c">

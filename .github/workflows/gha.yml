@@ -3,16 +3,17 @@ name: PMDK
 on: [push, pull_request]
 
 env:
-    GITHUB_REPO:    pmem/pmdk
-    DOCKERHUB_REPO: pmem/pmdk
+    GITHUB_REPO: pmem/pmdk
+    DOCKER_REPO: ghcr.io/pmem/pmdk
 
 jobs:
   linux:
     name: Linux
     runs-on: ubuntu-latest
     env:
-      DOCKERHUB_USER:          ${{ secrets.DOCKERHUB_USER }}
-      DOCKERHUB_PASSWORD:      ${{ secrets.DOCKERHUB_PASSWORD }}
+      # use org's Private Access Token to log in to GitHub Container Registry
+      GH_CR_USER:  ${{ secrets.GH_CR_USER }}
+      GH_CR_PAT:   ${{ secrets.GH_CR_PAT }}
       DOC_UPDATE_GITHUB_TOKEN: ${{ secrets.DOC_UPDATE_GITHUB_TOKEN }}
       HOST_WORKDIR:   /home/runner/work/pmdk/pmdk
       WORKDIR:        utils/docker
@@ -36,13 +37,15 @@ jobs:
                 "N=10 OS=ubuntu OS_VER=19.10 COVERAGE=1 FAULT_INJECTION=1 TEST_BUILD=debug"]
     steps:
        - name: Clone the git repo
-         uses: actions/checkout@v1
+         uses: actions/checkout@v2
+         with:
+            fetch-depth: 50
 
        - name: Pull or rebuild the image
          run: cd $WORKDIR && ${{ matrix.CONFIG }} ./pull-or-rebuild-image.sh
 
        - name: Run the build
-         run: cd $WORKDIR && ${{ matrix.CONFIG }} ./build-travis.sh
+         run: cd $WORKDIR && ${{ matrix.CONFIG }} ./build-CI.sh
 
        - name: Push the image
          run: cd $WORKDIR && source ./set-vars.sh && ${{ matrix.CONFIG }} /bin/bash -c "if [[ -f ${CI_FILE_PUSH_IMAGE_TO_REPO} ]]; then images/push-image.sh; fi"
@@ -68,7 +71,10 @@ jobs:
            echo "::add-path::$Env:perl"
 
        - name: Clone the git repo
-         uses: actions/checkout@v1
+         uses: actions/checkout@v2
+
+       - name: Unshallow it
+         run: git fetch --prune --unshallow
 
        - name: Various debug checks (cstyle, whitespace etc.)
          run: |
@@ -115,18 +121,36 @@ jobs:
                echo "`$Env:PMEM_FS_DIR_FORCE_PMEM = `"1`"" >> testconfig.ps1
                echo "`$Env:PMDK_NO_ABORT_MSG = `"1`"" >> testconfig.ps1
                echo "`$Env:TM = `"1`"" >> testconfig.ps1
-               write-output "config = {'unittest_log_level': 1, 'pmem_fs_dir': 'C:\\temp', 'non_pmem_fs_dir': 'C:\\temp', 'tm': True, 'test_type': 'check', 'fs': 'all', 'fs_dir_force_pmem': 1, 'keep_going': False, 'timeout': '4m', 'build': 'debug', 'force_enable': None}" | out-file "testconfig.py" -encoding utf8
+               write-output "config = {
+                                       'unittest_log_level': 1,
+                                       'cacheline_fs_dir': 'C:\\temp',
+                                       'force_cacheline': True,
+                                       'page_fs_dir': 'C:\\temp',
+                                       'force_page': False,
+                                       'byte_fs_dir': 'C:\\temp',
+                                       'force_byte': True,
+                                       'tm': True,
+                                       'test_type': 'check',
+                                       'granularity': 'all',
+                                       'fs_dir_force_pmem': 1,
+                                       'keep_going': False,
+                                       'timeout': '4m',
+                                       'build': 'debug',
+                                       'force_enable': None,
+                                       'fail_on_skip': False,
+                                       'enable_admin_tests': False,
+                                        }" | out-file "testconfig.py" -encoding utf8
 
                if ("${{ matrix.CONFIG }}" -eq "Debug") {
                    ./RUNTESTS.ps1 -b debug -o 4m
                    if ($?) {
-                       ./RUNTESTS.py -b debug
+                       python ./RUNTESTS.py -b debug
                    }
                }
                if ("${{ matrix.CONFIG }}" -eq "Release") {
                    ./RUNTESTS.ps1 -b nondebug -o 4m
                    if ($?) {
-                       ./RUNTESTS.py -b release
+                       python ./RUNTESTS.py -b release
                    }
                }
            }

@@ -27,8 +27,8 @@
 #include "util.h"
 #include "uuid.h"
 #include "shutdown_state.h"
-#include "os_dimm.h"
-#include "badblock.h"
+#include "badblocks.h"
+#include "set_badblocks.h"
 
 /*
  * check_flags_sync -- (internal) check if flags are supported for sync
@@ -131,7 +131,7 @@ replica_remove_part(struct pool_set *set, unsigned repn, unsigned partn,
 
 	/* if the part is a device dax, clear its bad blocks */
 	if (type == TYPE_DEVDAX && fix_bad_blocks &&
-	    os_dimm_devdax_clear_badblocks_all(part->path)) {
+	    badblocks_clear_all(part->path)) {
 		ERR("clearing bad blocks in device dax failed -- '%s'",
 			part->path);
 		errno = EIO;
@@ -734,7 +734,7 @@ replica_badblocks_recovery_file_save(struct part_health_status *part_hs)
 	/* save bad blocks */
 	for (unsigned i = 0; i < bbs->bb_cnt; i++) {
 		ASSERT(bbs->bbv[i].length != 0);
-		fprintf(recovery_file_name, "%llu %u\n",
+		fprintf(recovery_file_name, "%zu %zu\n",
 			bbs->bbv[i].offset, bbs->bbv[i].length);
 	}
 
@@ -798,7 +798,7 @@ replica_part_badblocks_recovery_file_read(struct part_health_status *part_hs)
 	unsigned long long min_offset = 0; /* minimum possible offset */
 
 	do {
-		if (fscanf(recovery_file, "%llu %u\n",
+		if (fscanf(recovery_file, "%zu %zu\n",
 				&bb.offset, &bb.length) < 2) {
 			LOG(1, "incomplete bad block recovery file -- '%s'",
 				path);
@@ -1138,7 +1138,7 @@ replica_badblocks_get(struct pool_set *set,
 			if (!exists)
 				continue;
 
-			int ret = os_badblocks_get(path, &part_hs->bbs);
+			int ret = badblocks_get(path, &part_hs->bbs);
 			if (ret < 0) {
 				ERR(
 					"!checking the pool part for bad blocks failed -- '%s'",
@@ -1219,7 +1219,7 @@ replica_badblocks_clear(struct pool_set *set,
 					rep_hs->flags |= HAS_CORRUPTED_HEADER;
 			}
 
-			ret = os_badblocks_clear(path, &part_hs->bbs);
+			ret = badblocks_clear(path, &part_hs->bbs);
 			if (ret < 0) {
 				LOG(1,
 					"clearing bad blocks in replica failed -- '%s'",

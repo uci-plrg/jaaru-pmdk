@@ -1,8 +1,8 @@
-// SPDX-License-Identifier: BSD-3-Clause
+/* SPDX-License-Identifier: BSD-3-Clause */
 /* Copyright 2019-2020, Intel Corporation */
 
 /*
- * libpmem2.h -- definitions of libpmem2 entry points (EXPERIMENTAL)
+ * libpmem2.h -- definitions of libpmem2 entry points
  *
  * This library provides support for programming with persistent memory (pmem).
  *
@@ -54,60 +54,56 @@ extern "C" {
 #define PMEM2_E_MAPPING_NOT_FOUND		(-100016)
 #define PMEM2_E_BUFFER_TOO_SMALL		(-100017)
 #define PMEM2_E_SOURCE_EMPTY			(-100018)
+#define PMEM2_E_INVALID_SHARING_VALUE		(-100019)
+#define PMEM2_E_SRC_DEVDAX_PRIVATE		(-100020)
+#define PMEM2_E_INVALID_ADDRESS_REQUEST_TYPE	(-100021)
+#define PMEM2_E_ADDRESS_UNALIGNED		(-100022)
+#define PMEM2_E_ADDRESS_NULL			(-100023)
+#define PMEM2_E_DEEP_FLUSH_RANGE		(-100024)
+#define PMEM2_E_INVALID_REGION_FORMAT		(-100025)
+#define PMEM2_E_DAX_REGION_NOT_FOUND		(-100026)
+#define PMEM2_E_INVALID_DEV_FORMAT		(-100027)
+#define PMEM2_E_CANNOT_READ_BOUNDS		(-100028)
+#define PMEM2_E_NO_BAD_BLOCK_FOUND		(-100029)
+#define PMEM2_E_LENGTH_OUT_OF_RANGE		(-100030)
+#define PMEM2_E_INVALID_PROT_FLAG		(-100031)
+#define PMEM2_E_NO_ACCESS			(-100032)
+#define PMEM2_E_VM_RESERVATION_NOT_EMPTY	(-100033)
+#define PMEM2_E_MAP_EXISTS			(-100034)
+#define PMEM2_E_FILE_DESCRIPTOR_NOT_SET		(-100035)
 
 /* source setup */
 
 struct pmem2_source;
 
 int pmem2_source_from_fd(struct pmem2_source **src, int fd);
-int pmem2_source_from_anon(struct pmem2_source **src);
+int pmem2_source_from_anon(struct pmem2_source **src, size_t size);
 #ifdef _WIN32
 int pmem2_source_from_handle(struct pmem2_source **src, HANDLE handle);
+int pmem2_source_get_handle(const struct pmem2_source *src, HANDLE *h);
+#else
+int pmem2_source_get_fd(const struct pmem2_source *src, int *fd);
 #endif
 
 int pmem2_source_size(const struct pmem2_source *src, size_t *size);
-
-/* XXX compatibility, remove later */
-#define pmem2_source_file_size pmem2_source_size
 
 int pmem2_source_alignment(const struct pmem2_source *src,
 		size_t *alignment);
 
 int pmem2_source_delete(struct pmem2_source **src);
 
-/* RAS */
+/* vm reservation setup */
 
-#ifndef _WIN32
-int pmem2_source_device_id(const struct pmem2_source *src,
-	char *id, size_t *len);
-#else
-int pmem2_source_device_idW(const struct pmem2_source *src,
-	wchar_t *id, size_t *len);
+struct pmem2_vm_reservation;
 
-int pmem2_source_device_idU(const struct pmem2_source *src,
-	char *id, size_t *len);
-#endif
+void *pmem2_vm_reservation_get_address(struct pmem2_vm_reservation *rsv);
 
-int pmem2_source_device_usc(const struct pmem2_source *src, uint64_t *usc);
+size_t pmem2_vm_reservation_get_size(struct pmem2_vm_reservation *rsv);
 
-struct pmem2_badblock_iterator;
+int pmem2_vm_reservation_new(struct pmem2_vm_reservation **rsv_ptr,
+		void *addr, size_t size);
 
-struct pmem2_badblock {
-	size_t offset;
-	size_t length;
-};
-
-int pmem2_badblock_iterator_new(const struct pmem2_source *cfg,
-		struct pmem2_badblock_iterator **pbb);
-
-int pmem2_badblock_next(struct pmem2_badblock_iterator *pbb,
-		struct pmem2_badblock *bb);
-
-void pmem2_badblock_iterator_delete(
-		struct pmem2_badblock_iterator **pbb);
-
-int pmem2_badblock_clear(const struct pmem2_source *cfg,
-		const struct pmem2_badblock *bb);
+int pmem2_vm_reservation_delete(struct pmem2_vm_reservation **rsv_ptr);
 
 /* config setup */
 
@@ -116,29 +112,6 @@ struct pmem2_config;
 int pmem2_config_new(struct pmem2_config **cfg);
 
 int pmem2_config_delete(struct pmem2_config **cfg);
-
-int pmem2_config_set_offset(struct pmem2_config *cfg, size_t offset);
-
-int pmem2_config_set_length(struct pmem2_config *cfg, size_t length);
-
-#define PMEM2_SHARED	0 /* default */
-#define PMEM2_PRIVATE	1
-
-int pmem2_config_set_sharing(struct pmem2_config *cfg, unsigned type);
-
-#define PMEM2_PROT_FROM_FD	0 /* default */
-#define PMEM2_PROT_EXEC		(1U << 29)
-#define PMEM2_PROT_READ		(1U << 30)
-#define PMEM2_PROT_WRITE	(1U << 31)
-
-int pmem2_config_set_protection(struct pmem2_config *cfg, unsigned flag);
-
-#define PMEM2_ADDRESS_ANY		0 /* default */
-#define PMEM2_ADDRESS_FIXED_REPLACE	1
-#define PMEM2_ADDRESS_FIXED_NOREPLACE	2
-
-int pmem2_config_set_address(struct pmem2_config *cfg, unsigned type,
-	void *addr);
 
 enum pmem2_granularity {
 	PMEM2_GRANULARITY_BYTE,
@@ -149,14 +122,40 @@ enum pmem2_granularity {
 int pmem2_config_set_required_store_granularity(struct pmem2_config *cfg,
 	enum pmem2_granularity g);
 
+int pmem2_config_set_offset(struct pmem2_config *cfg, size_t offset);
+
+int pmem2_config_set_length(struct pmem2_config *cfg, size_t length);
+
+enum pmem2_sharing_type {
+	PMEM2_SHARED,
+	PMEM2_PRIVATE,
+};
+
+int pmem2_config_set_sharing(struct pmem2_config *cfg,
+				enum pmem2_sharing_type type);
+
+#define PMEM2_PROT_EXEC	(1U << 29)
+#define PMEM2_PROT_READ	(1U << 30)
+#define PMEM2_PROT_WRITE	(1U << 31)
+#define PMEM2_PROT_NONE	0
+
+int pmem2_config_set_protection(struct pmem2_config *cfg,
+				unsigned prot);
+
+int pmem2_config_set_vm_reservation(struct pmem2_config *cfg,
+		struct pmem2_vm_reservation *rsv, size_t offset);
+
 /* mapping */
 
 struct pmem2_map;
+int pmem2_map_from_existing(struct pmem2_map **map,
+	const struct pmem2_source *src, void *addr, size_t len,
+	enum pmem2_granularity gran);
 
-int pmem2_map(const struct pmem2_config *cfg, const struct pmem2_source *src,
-	struct pmem2_map **map_ptr);
+int pmem2_map_new(struct pmem2_map **map_ptr, const struct pmem2_config *cfg,
+		const struct pmem2_source *src);
 
-int pmem2_unmap(struct pmem2_map **map_ptr);
+int pmem2_map_delete(struct pmem2_map **map_ptr);
 
 void *pmem2_map_get_address(struct pmem2_map *map);
 
@@ -209,6 +208,42 @@ pmem2_memmove_fn pmem2_get_memmove_fn(struct pmem2_map *map);
 pmem2_memcpy_fn pmem2_get_memcpy_fn(struct pmem2_map *map);
 
 pmem2_memset_fn pmem2_get_memset_fn(struct pmem2_map *map);
+
+/* RAS */
+
+int pmem2_deep_flush(struct pmem2_map *map, void *ptr, size_t size);
+
+#ifndef _WIN32
+int pmem2_source_device_id(const struct pmem2_source *src,
+	char *id, size_t *len);
+#else
+int pmem2_source_device_idW(const struct pmem2_source *src,
+	wchar_t *id, size_t *len);
+
+int pmem2_source_device_idU(const struct pmem2_source *src,
+	char *id, size_t *len);
+#endif
+
+int pmem2_source_device_usc(const struct pmem2_source *src, uint64_t *usc);
+
+struct pmem2_badblock_context;
+
+struct pmem2_badblock {
+	size_t offset;
+	size_t length;
+};
+
+int pmem2_badblock_context_new(struct pmem2_badblock_context **bbctx,
+		const struct pmem2_source *src);
+
+int pmem2_badblock_next(struct pmem2_badblock_context *bbctx,
+		struct pmem2_badblock *bb);
+
+void pmem2_badblock_context_delete(
+		struct pmem2_badblock_context **bbctx);
+
+int pmem2_badblock_clear(struct pmem2_badblock_context *bbctx,
+		const struct pmem2_badblock *bb);
 
 /* error handling */
 

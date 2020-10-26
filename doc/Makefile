@@ -77,7 +77,7 @@ MANPAGES_3_DUMMY = libpmem/pmem_drain.3 libpmem/pmem_has_hw_drain.3 libpmem/pmem
 		   libpmemobj/pmemobj_check_version.3 libpmemobj/pmemobj_check.3 libpmemobj/pmemobj_errormsg.3 libpmemobj/pmemobj_set_funcs.3 \
 		   libpmemobj/pmemobj_reserve.3 libpmemobj/pmemobj_xreserve.3 libpmemobj/pmemobj_defer_free.3 libpmemobj/pmemobj_set_value.3 libpmemobj/pmemobj_publish.3 libpmemobj/pmemobj_tx_publish.3 libpmemobj/pmemobj_tx_xpublish.3 libpmemobj/pmemobj_cancel.3 libpmemobj/pobj_reserve_new.3 libpmemobj/pobj_reserve_alloc.3 libpmemobj/pobj_xreserve_new.3 libpmemobj/pobj_xreserve_alloc.3 \
 		   libpmemobj/tx_xstrdup.3 libpmemobj/tx_xwcsdup.3 libpmemobj/tx_xfree.3 \
-		   libpmemobj/pmemobj_defrag.3 libpmemobj/pmemobj_get_user_data.3 libpmemobj/pmemobj_set_user_data.3 libpmemobj/pmemobj_tx_get_user_data.3 libpmemobj/pmemobj_tx_set_user_data.3
+		   libpmemobj/pmemobj_defrag.3 libpmemobj/pmemobj_get_user_data.3 libpmemobj/pmemobj_set_user_data.3 libpmemobj/pmemobj_tx_get_user_data.3 libpmemobj/pmemobj_tx_set_user_data.3 libpmemobj/pmemobj_tx_get_failure_behavior.3 libpmemobj/pmemobj_tx_set_failure_behavior.3
 
 MANPAGES_WEBDIR_LINUX = web_linux
 MANPAGES_WEBDIR_WINDOWS = web_windows
@@ -92,20 +92,37 @@ MANPAGES_3_DUMMY_EXP =
 MANPAGES_1_DUMMY_EXP =
 
 # libpmem2
-MANPAGES_7_MD_PMEM2 = libpmem2/libpmem2.7.md
+MANPAGES_7_MD_PMEM2 = libpmem2/libpmem2.7.md libpmem2/libpmem2_unsafe_shutdown.7.md
 MANPAGES_5_MD_PMEM2 =
-MANPAGES_3_MD_PMEM2 = libpmem2/pmem2_errormsg.3.md libpmem2/pmem2_config_new.3.md libpmem2/pmem2_map.3.md \
-		libpmem2/pmem2_unmap.3.md libpmem2/pmem2_map_get_address.3.md libpmem2/pmem2_map_get_size.3.md \
+MANPAGES_3_MD_PMEM2 = libpmem2/pmem2_errormsg.3.md libpmem2/pmem2_config_new.3.md libpmem2/pmem2_map_new.3.md \
+		libpmem2/pmem2_map_delete.3.md libpmem2/pmem2_map_get_address.3.md libpmem2/pmem2_map_get_size.3.md \
 		libpmem2/pmem2_source_from_fd.3.md libpmem2/pmem2_config_set_required_store_granularity.3.md \
 		libpmem2/pmem2_source_size.3.md libpmem2/pmem2_source_alignment.3.md \
 		libpmem2/pmem2_config_set_length.3.md libpmem2/pmem2_config_set_offset.3.md \
 		libpmem2/pmem2_map_get_store_granularity.3.md libpmem2/pmem2_get_flush_fn.3.md \
 		libpmem2/pmem2_get_drain_fn.3.md libpmem2/pmem2_get_persist_fn.3.md \
-		libpmem2/pmem2_perror.3.md libpmem2/pmem2_get_memmove_fn.3.md
+		libpmem2/pmem2_perror.3.md libpmem2/pmem2_get_memmove_fn.3.md libpmem2/pmem2_config_set_sharing.3.md \
+		libpmem2/pmem2_config_set_vm_reservation.3.md libpmem2/pmem2_vm_reservation_new.3.md \
+		libpmem2/pmem2_vm_reservation_get_address.3.md libpmem2/pmem2_vm_reservation_get_size.3.md \
+		libpmem2/pmem2_badblock_context_new.3.md libpmem2/pmem2_badblock_next.3.md \
+		libpmem2/pmem2_badblock_clear.3.md libpmem2/pmem2_config_set_protection.3.md \
+		libpmem2/pmem2_deep_flush.3.md libpmem2/pmem2_source_from_anon.3.md \
+		libpmem2/pmem2_source_device_id.3.md libpmem2/pmem2_source_device_usc.3.md \
+		libpmem2/pmem2_map_from_existing.3.md libpmem2/pmem2_source_get_fd.3.md \
+		libpmem2/pmem2_source_get_handle.3.md
+
 MANPAGES_1_MD_PMEM2 =
-ifeq ($(PMEM2_INSTALL),y)
 MANPAGES_3_DUMMY += libpmem2/pmem2_config_delete.3 libpmem2/pmem2_source_from_handle.3 libpmem2/pmem2_source_delete.3 \
-	libpmem2/pmem2_get_memset_fn.3 libpmem2/pmem2_get_memcpy_fn.3
+	libpmem2/pmem2_get_memset_fn.3 libpmem2/pmem2_get_memcpy_fn.3 libpmem2/pmem2_vm_reservation_delete.3 \
+	libpmem2/pmem2_badblock_context_delete.3
+
+# libpmemset
+MANPAGES_7_MD_PMEMSET = libpmemset/libpmemset.7.md
+MANPAGES_5_MD_PMEMSET =
+MANPAGES_3_MD_PMEMSET = libpmemset/pmemset_errormsg.3.md libpmemset/pmemset_perror.3.md
+MANPAGES_1_MD_PMEMSET =
+ifeq ($(PMEMSET_INSTALL),y)
+MANPAGES_3_DUMMY +=
 endif
 
 ifeq ($(BUILD_RPMEM),y)
@@ -138,6 +155,11 @@ MANPAGES_5_GROFF_PMEM2 = $(MANPAGES_5_MD_PMEM2:.5.md=.5)
 MANPAGES_3_GROFF_PMEM2 = $(MANPAGES_3_MD_PMEM2:.3.md=.3)
 MANPAGES_1_GROFF_PMEM2 = $(MANPAGES_1_MD_PMEM2:.1.md=.1)
 
+MANPAGES_7_GROFF_PMEMSET = $(MANPAGES_7_MD_PMEMSET:.7.md=.7)
+MANPAGES_5_GROFF_PMEMSET = $(MANPAGES_5_MD_PMEMSET:.5.md=.5)
+MANPAGES_3_GROFF_PMEMSET = $(MANPAGES_3_MD_PMEMSET:.3.md=.3)
+MANPAGES_1_GROFF_PMEMSET = $(MANPAGES_1_MD_PMEMSET:.1.md=.1)
+
 ifeq ($(EXPERIMENTAL),y)
 MANPAGES_7_GROFF += $(MANPAGES_7_GROFF_EXP)
 MANPAGES_5_GROFF += $(MANPAGES_5_GROFF_EXP)
@@ -150,22 +172,27 @@ MANPAGES_3_NOINSTALL += $(MANPAGES_3_GROFF_EXP)
 MANPAGES_1_NOINSTALL += $(MANPAGES_1_GROFF_EXP)
 endif
 
-ifeq ($(PMEM2_INSTALL),y)
 MANPAGES_7_GROFF += $(MANPAGES_7_GROFF_PMEM2)
 MANPAGES_5_GROFF += $(MANPAGES_5_GROFF_PMEM2)
 MANPAGES_3_GROFF += $(MANPAGES_3_GROFF_PMEM2)
 MANPAGES_1_GROFF += $(MANPAGES_1_GROFF_PMEM2)
+
+ifeq ($(PMEMSET_INSTALL),y)
+MANPAGES_7_GROFF += $(MANPAGES_7_GROFF_PMEMSET)
+MANPAGES_5_GROFF += $(MANPAGES_5_GROFF_PMEMSET)
+MANPAGES_3_GROFF += $(MANPAGES_3_GROFF_PMEMSET)
+MANPAGES_1_GROFF += $(MANPAGES_1_GROFF_PMEMSET)
 else
-MANPAGES_7_NOINSTALL += $(MANPAGES_7_GROFF_PMEM2)
-MANPAGES_5_NOINSTALL += $(MANPAGES_5_GROFF_PMEM2)
-MANPAGES_3_NOINSTALL += $(MANPAGES_3_GROFF_PMEM2)
-MANPAGES_1_NOINSTALL += $(MANPAGES_1_GROFF_PMEM2)
+MANPAGES_7_NOINSTALL += $(MANPAGES_7_GROFF_PMEMSET)
+MANPAGES_5_NOINSTALL += $(MANPAGES_5_GROFF_PMEMSET)
+MANPAGES_3_NOINSTALL += $(MANPAGES_3_GROFF_PMEMSET)
+MANPAGES_1_NOINSTALL += $(MANPAGES_1_GROFF_PMEMSET)
 endif
 
-MANPAGES_7_MD += $(MANPAGES_7_MD_PMEM2)
-MANPAGES_5_MD += $(MANPAGES_5_MD_PMEM2)
-MANPAGES_3_MD += $(MANPAGES_3_MD_PMEM2)
-MANPAGES_1_MD += $(MANPAGES_1_MD_PMEM2)
+MANPAGES_7_MD_WEB = $(MANPAGES_7_MD_PMEM2) + $(MANPAGES_7_MD_PMEMSET) + $(MANPAGES_7_MD)
+MANPAGES_5_MD_WEB = $(MANPAGES_5_MD_PMEM2) + $(MANPAGES_5_MD_PMEMSET) + $(MANPAGES_5_MD)
+MANPAGES_3_MD_WEB = $(MANPAGES_3_MD_PMEM2) + $(MANPAGES_3_MD_PMEMSET) + $(MANPAGES_3_MD)
+MANPAGES_1_MD_WEB = $(MANPAGES_1_MD_PMEM2) + $(MANPAGES_1_MD_PMEMSET) + $(MANPAGES_1_MD)
 
 MANPAGES = $(MANPAGES_7_GROFF) $(MANPAGES_5_GROFF) $(MANPAGES_3_GROFF) $(MANPAGES_1_GROFF) \
 	   $(MANPAGES_7_NOINSTALL) $(MANPAGES_5_NOINSTALL) $(MANPAGES_3_NOINSTALL) $(MANPAGES_1_NOINSTALL)
@@ -226,14 +253,14 @@ html: $(HTMLFILES)
 
 web: $(MANPAGES) | $(MANPAGES_WEBDIR_LINUX) $(MANPAGES_WEBDIR_WINDOWS)
 	$(MAKE) -C generated all
-	$(foreach f, $(MANPAGES_7_MD), WEB=1 WIN32="" ../utils/md2man.sh $(f) default.man $(MANPAGES_WEBDIR_LINUX)/$(f);)
-	$(foreach f, $(MANPAGES_5_MD), WEB=1 WIN32="" ../utils/md2man.sh $(f) default.man $(MANPAGES_WEBDIR_LINUX)/$(f);)
-	$(foreach f, $(MANPAGES_3_MD), WEB=1 WIN32="" ../utils/md2man.sh $(f) default.man $(MANPAGES_WEBDIR_LINUX)/$(f);)
-	$(foreach f, $(MANPAGES_1_MD), WEB=1 WIN32="" ../utils/md2man.sh $(f) default.man $(MANPAGES_WEBDIR_LINUX)/$(f);)
-	$(foreach f, $(MANPAGES_7_MD), WEB=1 WIN32=1 ../utils/md2man.sh $(f) default.man $(MANPAGES_WEBDIR_WINDOWS)/$(f);)
-	$(foreach f, $(MANPAGES_5_MD), WEB=1 WIN32=1 ../utils/md2man.sh $(f) default.man $(MANPAGES_WEBDIR_WINDOWS)/$(f);)
-	$(foreach f, $(MANPAGES_3_MD), WEB=1 WIN32=1 ../utils/md2man.sh $(f) default.man $(MANPAGES_WEBDIR_WINDOWS)/$(f);)
-	$(foreach f, $(MANPAGES_1_MD), WEB=1 WIN32=1 ../utils/md2man.sh $(f) default.man $(MANPAGES_WEBDIR_WINDOWS)/$(f);)
+	$(foreach f, $(MANPAGES_7_MD_WEB), WEB=1 WIN32="" ../utils/md2man.sh $(f) default.man $(MANPAGES_WEBDIR_LINUX)/$(f);)
+	$(foreach f, $(MANPAGES_5_MD_WEB), WEB=1 WIN32="" ../utils/md2man.sh $(f) default.man $(MANPAGES_WEBDIR_LINUX)/$(f);)
+	$(foreach f, $(MANPAGES_3_MD_WEB), WEB=1 WIN32="" ../utils/md2man.sh $(f) default.man $(MANPAGES_WEBDIR_LINUX)/$(f);)
+	$(foreach f, $(MANPAGES_1_MD_WEB), WEB=1 WIN32="" ../utils/md2man.sh $(f) default.man $(MANPAGES_WEBDIR_LINUX)/$(f);)
+	$(foreach f, $(MANPAGES_7_MD_WEB), WEB=1 WIN32=1 ../utils/md2man.sh $(f) default.man $(MANPAGES_WEBDIR_WINDOWS)/$(f);)
+	$(foreach f, $(MANPAGES_5_MD_WEB), WEB=1 WIN32=1 ../utils/md2man.sh $(f) default.man $(MANPAGES_WEBDIR_WINDOWS)/$(f);)
+	$(foreach f, $(MANPAGES_3_MD_WEB), WEB=1 WIN32=1 ../utils/md2man.sh $(f) default.man $(MANPAGES_WEBDIR_WINDOWS)/$(f);)
+	$(foreach f, $(MANPAGES_1_MD_WEB), WEB=1 WIN32=1 ../utils/md2man.sh $(f) default.man $(MANPAGES_WEBDIR_WINDOWS)/$(f);)
 
 compress: $(GZFILES)
 

@@ -13,7 +13,9 @@
 #include "out.h"
 #include "os.h"
 #include "persist.h"
+#include "deep_flush.h"
 #include "pmem2_arch.h"
+#include "pmem2_utils.h"
 #include "valgrind_internal.h"
 
 static struct pmem2_arch_info Info;
@@ -285,6 +287,77 @@ pmem2_drain_nop(void)
 }
 
 /*
+ * pmem2_deep_flush_page -- do nothing - pmem2_persist_fn already did msync
+ */
+int
+pmem2_deep_flush_page(struct pmem2_map *map, void *ptr, size_t size)
+{
+	LOG(3, "map %p ptr %p size %zu", map, ptr, size);
+	return 0;
+}
+
+/*
+ * pmem2_deep_flush_cache -- flush buffers for fsdax or write
+ * to deep_flush for DevDax
+ */
+int
+pmem2_deep_flush_cache(struct pmem2_map *map, void *ptr, size_t size)
+{
+	LOG(3, "map %p ptr %p size %zu", map, ptr, size);
+
+	enum pmem2_file_type type = map->source.value.ftype;
+
+	/*
+	 * XXX: this should be moved to pmem2_deep_flush_dax
+	 * while refactoring abstraction
+	 */
+	if (type == PMEM2_FTYPE_DEVDAX)
+		pmem2_persist_cpu_cache(ptr, size);
+
+	int ret = pmem2_deep_flush_dax(map, ptr, size);
+	if (ret < 0) {
+		LOG(1, "cannot perform deep flush cache for map %p", map);
+		return ret;
+	}
+
+	return 0;
+}
+
+/*
+ * pmem2_deep_flush_byte -- flush cpu cache and perform deep flush for dax
+ */
+int
+pmem2_deep_flush_byte(struct pmem2_map *map, void *ptr, size_t size)
+{
+	LOG(3, "map %p ptr %p size %zu", map, ptr, size);
+
+	if (map->source.type == PMEM2_SOURCE_ANON) {
+		ERR("Anonymous source does not support deep flush");
+		return PMEM2_E_NOSUPP;
+	}
+
+	ASSERT(map->source.type == PMEM2_SOURCE_FD ||
+		map->source.type == PMEM2_SOURCE_HANDLE);
+
+	enum pmem2_file_type type = map->source.value.ftype;
+
+	/*
+	 * XXX: this should be moved to pmem2_deep_flush_dax
+	 * while refactoring abstraction
+	 */
+	if (type == PMEM2_FTYPE_DEVDAX)
+		pmem2_persist_cpu_cache(ptr, size);
+
+	int ret = pmem2_deep_flush_dax(map, ptr, size);
+	if (ret < 0) {
+		LOG(1, "cannot perform deep flush byte for map %p", map);
+		return ret;
+	}
+
+	return 0;
+}
+
+/*
  * pmem2_set_flush_fns -- set function pointers related to flushing
  */
 void
@@ -295,16 +368,19 @@ pmem2_set_flush_fns(struct pmem2_map *map)
 			map->persist_fn = pmem2_persist_pages;
 			map->flush_fn = pmem2_persist_pages;
 			map->drain_fn = pmem2_drain_nop;
+			map->deep_flush_fn = pmem2_deep_flush_page;
 			break;
 		case PMEM2_GRANULARITY_CACHE_LINE:
 			map->persist_fn = pmem2_persist_cpu_cache;
 			map->flush_fn = pmem2_flush_cpu_cache;
 			map->drain_fn = pmem2_drain;
+			map->deep_flush_fn = pmem2_deep_flush_cache;
 			break;
 		case PMEM2_GRANULARITY_BYTE:
 			map->persist_fn = pmem2_persist_noflush;
 			map->flush_fn = pmem2_flush_nop;
 			map->drain_fn = pmem2_drain;
+			map->deep_flush_fn = pmem2_deep_flush_byte;
 			break;
 		default:
 			abort();
@@ -319,6 +395,7 @@ pmem2_set_flush_fns(struct pmem2_map *map)
 pmem2_persist_fn
 pmem2_get_persist_fn(struct pmem2_map *map)
 {
+	/* we do not need to clear err because this function cannot fail */
 	return map->persist_fn;
 }
 
@@ -329,6 +406,7 @@ pmem2_get_persist_fn(struct pmem2_map *map)
 pmem2_flush_fn
 pmem2_get_flush_fn(struct pmem2_map *map)
 {
+	/* we do not need to clear err because this function cannot fail */
 	return map->flush_fn;
 }
 
@@ -339,6 +417,7 @@ pmem2_get_flush_fn(struct pmem2_map *map)
 pmem2_drain_fn
 pmem2_get_drain_fn(struct pmem2_map *map)
 {
+	/* we do not need to clear err because this function cannot fail */
 	return map->drain_fn;
 }
 
@@ -353,12 +432,13 @@ pmem2_memmove_nonpmem(void *pmemdest, const void *src, size_t len,
 	if (flags & ~PMEM2_F_MEM_VALID_FLAGS)
 		ERR("invalid flags 0x%x", flags);
 #endif
-
+	PMEM2_API_START("pmem2_memmove");
 	Info.memmove_nodrain(pmemdest, src, len, flags & ~PMEM2_F_MEM_NODRAIN,
 			Info.flush);
 
 	pmem2_persist_pages(pmemdest, len);
 
+	PMEM2_API_END("pmem2_memmove");
 	return pmemdest;
 }
 
@@ -372,12 +452,13 @@ pmem2_memset_nonpmem(void *pmemdest, int c, size_t len, unsigned flags)
 	if (flags & ~PMEM2_F_MEM_VALID_FLAGS)
 		ERR("invalid flags 0x%x", flags);
 #endif
-
+	PMEM2_API_START("pmem2_memset");
 	Info.memset_nodrain(pmemdest, c, len, flags & ~PMEM2_F_MEM_NODRAIN,
 			Info.flush);
 
 	pmem2_persist_pages(pmemdest, len);
 
+	PMEM2_API_END("pmem2_memset");
 	return pmemdest;
 }
 
@@ -392,11 +473,12 @@ pmem2_memmove(void *pmemdest, const void *src, size_t len,
 	if (flags & ~PMEM2_F_MEM_VALID_FLAGS)
 		ERR("invalid flags 0x%x", flags);
 #endif
-
+	PMEM2_API_START("pmem2_memmove");
 	Info.memmove_nodrain(pmemdest, src, len, flags, Info.flush);
 	if ((flags & (PMEM2_F_MEM_NODRAIN | PMEM2_F_MEM_NOFLUSH)) == 0)
 		pmem2_drain();
 
+	PMEM2_API_END("pmem2_memmove");
 	return pmemdest;
 }
 
@@ -410,11 +492,12 @@ pmem2_memset(void *pmemdest, int c, size_t len, unsigned flags)
 	if (flags & ~PMEM2_F_MEM_VALID_FLAGS)
 		ERR("invalid flags 0x%x", flags);
 #endif
-
+	PMEM2_API_START("pmem2_memset");
 	Info.memset_nodrain(pmemdest, c, len, flags, Info.flush);
 	if ((flags & (PMEM2_F_MEM_NODRAIN | PMEM2_F_MEM_NOFLUSH)) == 0)
 		pmem2_drain();
 
+	PMEM2_API_END("pmem2_memset");
 	return pmemdest;
 }
 
@@ -429,11 +512,12 @@ pmem2_memmove_eadr(void *pmemdest, const void *src, size_t len,
 	if (flags & ~PMEM2_F_MEM_VALID_FLAGS)
 		ERR("invalid flags 0x%x", flags);
 #endif
-
+	PMEM2_API_START("pmem2_memmove");
 	Info.memmove_nodrain_eadr(pmemdest, src, len, flags, Info.flush);
 	if ((flags & (PMEM2_F_MEM_NODRAIN | PMEM2_F_MEM_NOFLUSH)) == 0)
 		pmem2_drain();
 
+	PMEM2_API_END("pmem2_memmove");
 	return pmemdest;
 }
 
@@ -447,11 +531,12 @@ pmem2_memset_eadr(void *pmemdest, int c, size_t len, unsigned flags)
 	if (flags & ~PMEM2_F_MEM_VALID_FLAGS)
 		ERR("invalid flags 0x%x", flags);
 #endif
-
+	PMEM2_API_START("pmem2_memset");
 	Info.memset_nodrain_eadr(pmemdest, c, len, flags, Info.flush);
 	if ((flags & (PMEM2_F_MEM_NODRAIN | PMEM2_F_MEM_NOFLUSH)) == 0)
 		pmem2_drain();
 
+	PMEM2_API_END("pmem2_memset");
 	return pmemdest;
 }
 
@@ -489,6 +574,7 @@ pmem2_set_mem_fns(struct pmem2_map *map)
 pmem2_memmove_fn
 pmem2_get_memmove_fn(struct pmem2_map *map)
 {
+	/* we do not need to clear err because this function cannot fail */
 	return map->memmove_fn;
 }
 
@@ -498,6 +584,7 @@ pmem2_get_memmove_fn(struct pmem2_map *map)
 pmem2_memcpy_fn
 pmem2_get_memcpy_fn(struct pmem2_map *map)
 {
+	/* we do not need to clear err because this function cannot fail */
 	return map->memcpy_fn;
 }
 
@@ -507,5 +594,17 @@ pmem2_get_memcpy_fn(struct pmem2_map *map)
 pmem2_memset_fn
 pmem2_get_memset_fn(struct pmem2_map *map)
 {
+	/* we do not need to clear err because this function cannot fail */
 	return map->memset_fn;
 }
+
+#if VG_PMEMCHECK_ENABLED
+/*
+ * pmem2_emit_log -- logs library and function names to pmemcheck store log
+ */
+void
+pmem2_emit_log(const char *func, int order)
+{
+	util_emit_log("libpmem2", func, order);
+}
+#endif

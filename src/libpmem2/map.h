@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: BSD-3-Clause
+/* SPDX-License-Identifier: BSD-3-Clause */
 /* Copyright 2019-2020, Intel Corporation */
 
 /*
@@ -10,6 +10,9 @@
 #include <stddef.h>
 #include <stdbool.h>
 #include "libpmem2.h"
+#include "os.h"
+#include "source.h"
+#include "vm_reservation.h"
 
 #ifdef _WIN32
 #include <windows.h>
@@ -18,6 +21,9 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+typedef int (*pmem2_deep_flush_fn)(struct pmem2_map *map,
+		void *ptr, size_t size);
 
 struct pmem2_map {
 	void *addr; /* base address */
@@ -29,17 +35,18 @@ struct pmem2_map {
 	pmem2_persist_fn persist_fn;
 	pmem2_flush_fn flush_fn;
 	pmem2_drain_fn drain_fn;
+	pmem2_deep_flush_fn deep_flush_fn;
 
 	pmem2_memmove_fn memmove_fn;
 	pmem2_memcpy_fn memcpy_fn;
 	pmem2_memset_fn memset_fn;
 
-#ifdef _WIN32
-	HANDLE handle;
-#endif
+	struct pmem2_source source;
+	struct pmem2_vm_reservation *reserv;
 };
 
-enum pmem2_granularity get_min_granularity(bool eADR, bool is_pmem);
+enum pmem2_granularity get_min_granularity(bool eADR, bool is_pmem,
+					enum pmem2_sharing_type sharing);
 struct pmem2_map *pmem2_map_find(const void *addr, size_t len);
 int pmem2_register_mapping(struct pmem2_map *map);
 int pmem2_unregister_mapping(struct pmem2_map *map);

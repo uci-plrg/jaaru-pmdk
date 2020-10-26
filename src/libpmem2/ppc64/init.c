@@ -3,23 +3,64 @@
 /* Copyright 2019-2020, Intel Corporation */
 
 #include <errno.h>
+#include <sys/mman.h>
 
 #include "out.h"
 #include "pmem2_arch.h"
-#include "platform_generic.h"
+#include "util.h"
 
 /*
- * Probe for valid ppc platforms via the 'ppc_platforms' array and perform its
- * initialization.
+ * Older assemblers versions do not support the latest versions of L, e.g.
+ * Binutils 2.34.
+ * Workaround this by using longs.
  */
+#define __SYNC(l) ".long (0x7c0004AC | ((" #l ") << 21))"
+#define __DCBF(ra, rb, l) ".long (0x7c0000AC | ((" #l ") << 21)"	\
+	" | ((" #ra ") << 16) | ((" #rb ") << 11))"
+
+static void
+ppc_fence(void)
+{
+	LOG(15, NULL);
+
+	/*
+	 * Force a memory barrier to flush out all cache lines.
+	 * Uses a heavyweight sync in order to guarantee the memory ordering
+	 * even with a data cache flush.
+	 * According to the POWER ISA 3.1, phwsync (aka. sync (L=4)) is treated
+	 * as a hwsync by processors compatible with previous versions of the
+	 * POWER ISA.
+	 */
+	asm volatile(__SYNC(4) : : : "memory");
+}
+
+static void
+ppc_flush(const void *addr, size_t size)
+{
+	LOG(15, "addr %p size %zu", addr, size);
+
+	uintptr_t uptr = (uintptr_t)addr;
+	uintptr_t end = uptr + size;
+
+	/* round down the address */
+	uptr &= ~(CACHELINE_SIZE - 1);
+	while (uptr < end) {
+		/*
+		 * Flush the data cache block.
+		 * According to the POWER ISA 3.1, dcbstps (aka. dcbf (L=6))
+		 * behaves as dcbf (L=0) on previous processors.
+		 */
+		asm volatile(__DCBF(0, %0, 6) : :"r"(uptr) : "memory");
+
+		uptr += CACHELINE_SIZE;
+	}
+}
+
 void
 pmem2_arch_init(struct pmem2_arch_info *info)
 {
 	LOG(3, "libpmem*: PPC64 support");
-	LOG(3, "PMDK PPC64 support is currently experimental");
-	LOG(3, "Please don't use this library in production environment");
 
-	/* Init platform and to initialize the pmem funcs */
-	if (platform_init(info))
-		FATAL("Unable to init platform");
+	info->fence = ppc_fence;
+	info->flush = ppc_flush;
 }

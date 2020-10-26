@@ -10,8 +10,7 @@
 
 #include "unittest.h"
 #include "file.h"
-#include "ut_pmem2_utils.h"
-#include "ut_pmem2_config.h"
+#include "ut_pmem2.h"
 #include "memcpy_common.h"
 
 /*
@@ -52,6 +51,7 @@ main(int argc, char *argv[])
 			argv[2], argv[3], argv[4], thr ? thr : "default",
 			avx ? "" : "!",
 			avx512f ? "" : "!");
+	util_init();
 
 	fd = OPEN(argv[1], O_RDWR);
 	UT_ASSERT(fd != -1);
@@ -63,7 +63,7 @@ main(int argc, char *argv[])
 	PMEM2_SOURCE_FROM_FD(&psrc, fd);
 	PMEM2_CONFIG_SET_GRANULARITY(cfg, PMEM2_GRANULARITY_PAGE);
 
-	int ret = pmem2_map(cfg, psrc, &map);
+	int ret = pmem2_map_new(&map, cfg, psrc);
 	UT_PMEM2_EXPECT_RETURN(ret, 0);
 
 	PMEM2_CONFIG_DELETE(&cfg);
@@ -81,6 +81,7 @@ main(int argc, char *argv[])
 	memset(dest, 0, (2 * bytes));
 	persist(dest, 2 * bytes);
 	memset(src, 0, (2 * bytes));
+	persist(src, 2 * bytes);
 
 	pmem2_memcpy_fn memcpy_fn = pmem2_get_memcpy_fn(map);
 	do_memcpy_variants(fd, dest, dest_off, src, src_off, bytes,
@@ -95,7 +96,7 @@ main(int argc, char *argv[])
 	do_memcpy_variants(fd, dest, dest_off, src, src_off, bytes, mapped_len,
 		argv[1], persist, memcpy_fn);
 
-	ret = pmem2_unmap(&map);
+	ret = pmem2_map_delete(&map);
 	UT_ASSERTeq(ret, 0);
 
 	CLOSE(fd);

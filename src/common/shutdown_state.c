@@ -9,12 +9,12 @@
 #include <stdbool.h>
 #include <endian.h>
 #include "shutdown_state.h"
-#include "os_dimm.h"
 #include "out.h"
 #include "util.h"
 #include "os_deep.h"
 #include "set.h"
 #include "libpmem2.h"
+#include "badblocks.h"
 #include "../libpmem2/pmem2_utils.h"
 
 #define FLUSH_SDS(sds, rep) \
@@ -83,7 +83,8 @@ shutdown_state_add_part(struct shutdown_state *sds, int fd,
 		goto err;
 	}
 
-	if (pmem2_source_device_id(src, NULL, &len)) {
+	ret = pmem2_source_device_id(src, NULL, &len);
+	if (ret != PMEM2_E_NOSUPP && ret != 0) {
 		ERR("cannot read uuid of %d", fd);
 		goto err;
 	}

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BSD-3-Clause
-/* Copyright 2015-2018, Intel Corporation */
+/* Copyright 2015-2020, Intel Corporation */
 /*
  * pmem_memset.cpp -- benchmark for pmem_memset function
  */
@@ -28,14 +28,14 @@ typedef int (*operation_fn)(void *dest, int c, size_t len);
  * memset_args -- benchmark specific command line options
  */
 struct memset_args {
-	char *mode;	/* operation mode: stat, seq, rand */
-	bool memset;       /* use libc memset function */
-	bool persist;      /* perform persist operation */
-	bool msync;	/* perform msync operation */
-	bool no_warmup;    /* do not do warmup */
+	char *mode;	   /* operation mode: stat, seq, rand */
+	bool memset;	   /* use libc memset function */
+	bool persist;	   /* perform persist operation */
+	bool msync;	   /* perform msync operation */
+	bool no_warmup;	   /* do not do warmup */
 	size_t chunk_size; /* elementary chunk size */
 	size_t dest_off;   /* destination address offset */
-	unsigned seed;     /* seed for random numbers */
+	unsigned seed;	   /* seed for random numbers */
 };
 
 /*
@@ -43,12 +43,12 @@ struct memset_args {
  */
 struct memset_bench {
 	struct memset_args *pargs; /* benchmark specific arguments */
-	uint64_t *offsets;	 /* random/sequential address offsets */
-	size_t n_offsets;	  /* number of random elements */
+	uint64_t *offsets;	   /* random/sequential address offsets */
+	size_t n_offsets;	   /* number of random elements */
 	int const_b;		   /* memset() value */
 	size_t fsize;		   /* file size */
 	void *pmem_addr;	   /* mapped file address */
-	operation_fn func_op;      /* operation function */
+	operation_fn func_op;	   /* operation function */
 };
 
 /*
@@ -95,7 +95,8 @@ init_offsets(struct benchmark_args *args, struct memset_bench *mb,
 		return -1;
 	}
 
-	unsigned seed = mb->pargs->seed;
+	rng_t rng;
+	randomize_r(&rng, mb->pargs->seed);
 
 	for (unsigned i = 0; i < n_threads; i++) {
 		for (size_t j = 0; j < n_ops; j++) {
@@ -108,8 +109,7 @@ init_offsets(struct benchmark_args *args, struct memset_bench *mb,
 					o = i * n_ops + j;
 					break;
 				case OP_MODE_RAND:
-					o = i * n_ops +
-						os_rand_r(&seed) % n_ops;
+					o = i * n_ops + rnd64_r(&rng) % n_ops;
 					break;
 				default:
 					assert(0);

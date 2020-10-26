@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: BSD-3-Clause
+/* SPDX-License-Identifier: BSD-3-Clause */
 /* Copyright 2014-2020, Intel Corporation */
 
 /*
@@ -61,6 +61,7 @@
 #include <libpmemlog.h>
 #include <libpmemobj.h>
 #include <libpmempool.h>
+#include <libpmemset.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -201,7 +202,7 @@ void ut_err(const char *file, int line, const char *func,
 /* assertion with extra info printed if assertion fails at runtime */
 #define UT_ASSERTinfo_rt(cnd, info) \
 	((void)((cnd) || (ut_fatal(__FILE__, __LINE__, __func__,\
-	"assertion failure: %s (%s = %s)", #cnd, #info, info), 0)))
+	"assertion failure: %s (%s)", #cnd, info), 0)))
 
 /* assert two integer values are equal at runtime */
 #define UT_ASSERTeq_rt(lhs, rhs)\
@@ -399,6 +400,9 @@ int ut_mprotect(const char *file, int line, const char *func, void *addr,
 int ut_ftruncate(const char *file, int line, const char *func,
     int fd, os_off_t length);
 
+void *ut_file_map(const char *file, int line, const char *func, int fd,
+    size_t size);
+
 long long ut_strtoll(const char *file, int line, const char *func,
     const char *nptr, char **endptr, int base);
 
@@ -482,6 +486,9 @@ int ut_snprintf(const char *file, int line, const char *func,
 
 #define FTRUNCATE(fd, length)\
     ut_ftruncate(__FILE__, __LINE__, __func__, fd, length)
+
+#define FILE_MAP(fd, size)\
+    ut_file_map(__FILE__, __LINE__, __func__, fd, size);
 
 #define ATOU(nptr) STRTOU(nptr, NULL, 10)
 #define ATOUL(nptr) STRTOUL(nptr, NULL, 10)

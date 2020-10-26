@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BSD-3-Clause
-/* Copyright 2018, Intel Corporation */
+/* Copyright 2018-2020, Intel Corporation */
 
 /*
  * extents -- extents listing
@@ -8,8 +8,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <fcntl.h>
 #include <errno.h>
 
+#include "libpmem2.h"
+#include "os.h"
 #include "extent.h"
 
 #define B2SEC(n) ((n) >> 9)	/* convert bytes to sectors */
@@ -28,6 +31,7 @@ static const char *usage_str =
 int
 main(int argc, char *argv[])
 {
+	struct extents *exts = NULL;
 	long unsigned offset = 0;
 	unsigned extent = 0;
 	char *error;
@@ -78,25 +82,17 @@ main(int argc, char *argv[])
 
 	const char *file = argv[optind];
 
-	struct extents *exts = malloc(sizeof(struct extents));
-	if (exts == NULL)
-		return -1;
-
-	long count = os_extents_count(file, exts);
-	if (count < 0)
-		goto exit_free;
-
-	if (count == 0) {
-		ret = 0;
+	int fd = os_open(file, O_RDONLY);
+	if (fd == -1) {
+		perror(file);
 		goto exit_free;
 	}
 
-	exts->extents = malloc(exts->extents_count * sizeof(struct extent));
-	if (exts->extents == NULL)
+	ret = pmem2_extents_create_get(fd, &exts);
+	if (ret)
 		goto exit_free;
 
-	ret = os_extents_get(file, exts);
-	if (ret)
+	if (exts->extents_count == 0)
 		goto exit_free;
 
 	switch (mode) {
@@ -144,9 +140,10 @@ main(int argc, char *argv[])
 	}
 
 exit_free:
-	if (exts->extents)
-		free(exts->extents);
-	free(exts);
+	pmem2_extents_destroy(&exts);
+
+	if (fd != -1)
+		close(fd);
 
 	return ret;
 }

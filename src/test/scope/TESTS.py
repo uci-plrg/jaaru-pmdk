@@ -66,6 +66,7 @@ def parse_lib_win(ctx, lib, static):
     return '\n'.join(out) + '\n'
 
 
+@t.require_valgrind_disabled('drd', 'helgrind', 'memcheck', 'pmemcheck')
 @g.no_testdir()
 class Common(t.Test):
     test_type = t.Medium
@@ -154,3 +155,21 @@ class TEST12(Common):
 class TEST13(Common):
     """Check scope of libpmem2 library (*nix)"""
     checked_lib = 'libpmem2'
+
+
+@t.windows_only
+class TEST14(Common):
+    """Check scope of libpmem2 library (windows)"""
+    checked_lib = 'libpmem2'
+
+
+@t.windows_exclude
+class TEST15(Common):
+    """Check scope of libpmemset library (*nix)"""
+    checked_lib = 'libpmemset'
+
+
+@t.windows_only
+class TEST16(Common):
+    """Check scope of libpmemset library (windows)"""
+    checked_lib = 'libpmemset'

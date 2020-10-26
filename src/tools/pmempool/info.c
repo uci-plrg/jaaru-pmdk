@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BSD-3-Clause
-/* Copyright 2014-2019, Intel Corporation */
+/* Copyright 2014-2020, Intel Corporation */
 
 /*
  * info.c -- pmempool info command main source file
@@ -25,8 +25,8 @@
 #include "info.h"
 #include "set.h"
 #include "file.h"
-#include "os_badblock.h"
-#include "badblock.h"
+#include "badblocks.h"
+#include "set_badblocks.h"
 
 #define DEFAULT_CHUNK_TYPES\
 	((1<<CHUNK_TYPE_FREE)|\
@@ -536,7 +536,7 @@ pmempool_info_badblocks(struct pmem_info *pip, const char *file_name, int v)
 	if (bbs == NULL)
 		return -1;
 
-	ret = os_badblocks_get(file_name, bbs);
+	ret = badblocks_get(file_name, bbs);
 	if (ret) {
 		if (errno == ENOTSUP) {
 			outv(v, BB_NOT_SUPP "\n");
@@ -556,7 +556,7 @@ pmempool_info_badblocks(struct pmem_info *pip, const char *file_name, int v)
 
 	unsigned b;
 	for (b = 0; b < bbs->bb_cnt; b++) {
-		outv(v, "\t%llu\t\t%u\n",
+		outv(v, "\t%zu\t\t%zu\n",
 			B2SEC(bbs->bbv[b].offset),
 			B2SEC(bbs->bbv[b].length));
 	}

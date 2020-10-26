@@ -9,8 +9,7 @@
 
 #include "fault_injection.h"
 #include "unittest.h"
-#include "ut_pmem2_utils.h"
-#include "ut_pmem2_config.h"
+#include "ut_pmem2.h"
 #include "ut_fh.h"
 #include "config.h"
 #include "out.h"
@@ -93,6 +92,7 @@ test_tmpfile(const char *dir, os_off_t requested_size,
 	UT_PMEM2_EXPECT_RETURN(ret, 0);
 	UT_ASSERTeq(size, requested_size);
 
+	PMEM2_SOURCE_DELETE(&src);
 	UT_FH_CLOSE(fh);
 }
 

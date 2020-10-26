@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BSD-3-Clause
-/* Copyright 2015-2018, Intel Corporation */
+/* Copyright 2015-2020, Intel Corporation */
 /*
  * log.cpp -- pmemlog benchmarks definitions
  */
@@ -17,6 +17,7 @@
 #include "libpmemlog.h"
 #include "os.h"
 #include "poolset_util.hpp"
+#include "rand.h"
 
 /*
  * Size of pool header, pool descriptor
@@ -29,24 +30,24 @@
  * prog_args - benchmark's specific command line arguments
  */
 struct prog_args {
-	unsigned seed;   /* seed for pseudo-random generator */
-	bool rand;       /* use random numbers */
-	int vec_size;    /* vector size */
-	size_t el_size;  /* size of single append */
+	unsigned seed;	 /* seed for pseudo-random generator */
+	bool rand;	 /* use random numbers */
+	int vec_size;	 /* vector size */
+	size_t el_size;	 /* size of single append */
 	size_t min_size; /* minimum size for random mode */
-	bool no_warmup;  /* don't do warmup */
-	bool fileio;     /* use file io instead of pmemlog */
+	bool no_warmup;	 /* don't do warmup */
+	bool fileio;	 /* use file io instead of pmemlog */
 };
 
 /*
  * thread_info - thread specific data
  */
 struct log_worker_info {
-	unsigned seed;
+	rng_t rng;
 	struct iovec *iov; /* io vector */
-	char *buf;	 /* buffer for write/read operations */
+	char *buf;	   /* buffer for write/read operations */
 	size_t buf_size;   /* buffer size */
-	size_t buf_ptr;    /* pointer for read operations */
+	size_t buf_ptr;	   /* pointer for read operations */
 	size_t *rand_sizes;
 	size_t *vec_sizes; /* sum of sizes in vector */
 };
@@ -56,10 +57,10 @@ struct log_worker_info {
  */
 struct log_bench {
 	size_t psize;		/* size of pool */
-	PMEMlogpool *plp;       /* pmemlog handle */
+	PMEMlogpool *plp;	/* pmemlog handle */
 	struct prog_args *args; /* benchmark specific arguments */
 	int fd;			/* file descriptor for file io mode */
-	unsigned seed;
+	rng_t rng;
 	/*
 	 * Pointer to the main benchmark operation. The appropriate function
 	 * will be assigned depending on the benchmark specific arguments.
@@ -336,7 +337,7 @@ log_init_worker(struct benchmark *bench, struct benchmark_args *args,
 
 	if (lb->args->rand) {
 		/* each thread has random seed */
-		worker_info->seed = (unsigned)os_rand_r(&lb->seed);
+		randomize_r(&worker_info->rng, rnd64_r(&lb->rng));
 
 		/* each vector element has its own random size */
 		size_t n_sizes = args->n_ops_per_thread * lb->args->vec_size;
@@ -350,12 +351,10 @@ log_init_worker(struct benchmark *bench, struct benchmark_args *args,
 
 		/* generate append sizes */
 		for (size_t i = 0; i < n_sizes; i++) {
-			auto hr = (uint32_t)os_rand_r(&worker_info->seed);
-			auto lr = (uint32_t)os_rand_r(&worker_info->seed);
-			uint64_t r64 = (uint64_t)hr << 32 | lr;
 			size_t width = lb->args->el_size - lb->args->min_size;
 			worker_info->rand_sizes[i] =
-				r64 % width + lb->args->min_size;
+				rnd64_r(&worker_info->rng) % width +
+				lb->args->min_size;
 		}
 	} else {
 		worker_info->rand_sizes = nullptr;
@@ -466,6 +465,8 @@ log_init(struct benchmark *bench, struct benchmark_args *args)
 
 	if (lb->args->rand && lb->args->min_size == lb->args->el_size)
 		lb->args->rand = false;
+
+	randomize_r(&lb->rng, lb->args->seed);
 
 	/* align pool size to ensure that we have enough usable space */
 	lb->psize =

@@ -1,5 +1,5 @@
-// SPDX-License-Identifier: BSD-3-Clause
-/* Copyright 2015-2019, Intel Corporation */
+/* SPDX-License-Identifier: BSD-3-Clause */
+/* Copyright 2015-2020, Intel Corporation */
 
 /*
  * benchmark.hpp -- This file contains interface for creating benchmarks to the
@@ -35,13 +35,14 @@
 
 #include "benchmark_time.hpp"
 #include "os.h"
+#include "rand.h"
 #include "util.h"
 
 #ifndef ARRAY_SIZE
 #define ARRAY_SIZE(x) (sizeof(x) / sizeof(x[0]))
 #endif
 #define RRAND(max, min) (rand() % ((max) - (min)) + (min))
-#define RRAND_R(seed, max, min) (os_rand_r(seed) % ((max) - (min)) + (min))
+#define RRAND_R(rng, max, min) (rnd64_r(rng) % ((max) - (min)) + (min))
 
 struct benchmark;
 
@@ -53,21 +54,21 @@ struct benchmark;
  * clos, nclos and opt_size in benchmark_info structure.
  */
 struct benchmark_args {
-	const char *fname;       /* path to test file */
+	const char *fname;	 /* path to test file */
 	size_t fsize;		 /* size of test file */
 	bool is_poolset;	 /* test file is a poolset */
 	bool is_dynamic_poolset; /* test file is directory in which
 				    benchmark creates reusable files */
 	mode_t fmode;		 /* test file's permissions */
-	unsigned n_threads;      /* number of working threads */
+	unsigned n_threads;	 /* number of working threads */
 	size_t n_ops_per_thread; /* number of operations per thread */
-	bool thread_affinity;    /* set worker threads CPU affinity mask */
-	ssize_t main_affinity;   /* main thread affinity */
-	char *affinity_list;     /* set CPU affinity order */
+	bool thread_affinity;	 /* set worker threads CPU affinity mask */
+	ssize_t main_affinity;	 /* main thread affinity */
+	char *affinity_list;	 /* set CPU affinity order */
 	size_t dsize;		 /* data size */
 	unsigned seed;		 /* PRNG seed */
-	unsigned repeats;	/* number of repeats of one scenario */
-	unsigned min_exe_time;   /* minimal execution time */
+	unsigned repeats;	 /* number of repeats of one scenario */
+	unsigned min_exe_time;	 /* minimal execution time */
 	bool help;		 /* print help for benchmark */
 	void *opts;		 /* benchmark specific arguments */
 };
@@ -77,7 +78,7 @@ struct benchmark_args {
  */
 struct benchmark_results {
 	uint64_t nbytes;       /* number of bytes processed */
-	uint64_t nops;	 /* number of operations executed */
+	uint64_t nops;	       /* number of operations executed */
 	benchmark_time_t time; /* total execution time */
 };
 
@@ -223,8 +224,8 @@ struct worker_info {
 	struct operation_info *opinfo; /* operation info structure */
 	size_t nops;		       /* number of operations */
 	void *priv;		       /* worker's private data */
-	benchmark_time_t beg;	  /* start time */
-	benchmark_time_t end;	  /* end time */
+	benchmark_time_t beg;	       /* start time */
+	benchmark_time_t end;	       /* end time */
 };
 
 /*
@@ -234,7 +235,7 @@ struct operation_info {
 	struct worker_info *worker;  /* worker's info */
 	struct benchmark_args *args; /* benchmark arguments */
 	size_t index;		     /* operation's index */
-	benchmark_time_t end;	/* operation's end time */
+	benchmark_time_t end;	     /* operation's end time */
 };
 
 /*

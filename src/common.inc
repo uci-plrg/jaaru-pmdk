@@ -42,8 +42,8 @@ $(error Cannot evaluate version)
 endif
 
 ifeq ($(CLANG_FORMAT),)
-ifeq ($(shell command -v clang-format-6.0 > /dev/null && echo y || echo n), y)
-export CLANG_FORMAT ?= clang-format-6.0
+ifeq ($(shell command -v clang-format-9 > /dev/null && echo y || echo n), y)
+export CLANG_FORMAT ?= clang-format-9
 else
 export CLANG_FORMAT ?= clang-format
 endif
@@ -313,12 +313,22 @@ LIBFABRIC_MIN_VERSION := 1.4.2
 # Keep in sync with requirements in src/test/unittest/unittest.sh and
 # utils/docker/images/install-libfabric.sh.
 ifeq ($(BUILD_RPMEM),)
-export BUILD_RPMEM := $(call check_package, libfabric --atleast-version=$(LIBFABRIC_MIN_VERSION))
+BUILD_RPMEM := $(call check_package, libfabric --atleast-version=$(LIBFABRIC_MIN_VERSION))
+endif
 ifneq ($(BUILD_RPMEM),y)
 export BUILD_RPMEM_INFO := libfabric (version >= $(LIBFABRIC_MIN_VERSION)) is missing -- \
 see src/librpmem/README for details
+else
+LIBFABRIC_CFLAGS := $(shell $(PKG_CONFIG) --cflags libfabric)
+LIBFABRIC_LD_LIBRARY_PATHS := $(shell $(PKG_CONFIG) --variable=libdir libfabric)
+LIBFABRIC_LIBS := $(shell $(PKG_CONFIG) --libs libfabric)
+LIBFABRIC_PATH := $(shell $(PKG_CONFIG) --variable=exec_prefix libfabric)/bin
 endif
-endif
+export BUILD_RPMEM
+export LIBFABRIC_CFLAGS
+export LIBFABRIC_LD_LIBRARY_PATHS
+export LIBFABRIC_LIBS
+export LIBFABRIC_PATH
 
 # unsafe shutdown count and badblock access without root (depends on kernel 4.20)
 NDCTL_MIN_VERSION := 63

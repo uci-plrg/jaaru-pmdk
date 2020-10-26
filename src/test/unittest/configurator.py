@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: BSD-3-Clause
-# Copyright 2019, Intel Corporation
+# Copyright 2019-2020, Intel Corporation
 #
 """Parser for user provided test configuration"""
 
@@ -25,7 +25,7 @@ except ImportError:
 class _ConfigFromDict:
     """
     Class fields are created from provided dictionary. Used for creating
-    a final config object
+    a final config object.
     """
     def __init__(self, dict_):
         for k, v in dict_.items():
@@ -69,20 +69,15 @@ def _str2list(config):
 
     seq = []
     try:
-        if ',' in arg or '-' in arg:
-            arg = arg.split(',')
-            for number in arg:
-                if '-' in number:
-                    number = number.split('-')
-                    begin = int(number[0])
-                    end = int(number[1])
-                    step = 1 if begin < end else -1
-                    for x in range(begin, end + step, step):
-                        seq.append(x)
-                else:
-                    seq.append(int(number))
-        else:
-            seq.append(int(arg))
+        for number in arg.split(','):
+            if '-' in number:
+                number = number.split('-')
+                begin = int(number[0])
+                end = int(number[1])
+                step = 1 if begin < end else -1
+                seq.extend(range(begin, end + step, step))
+            else:
+                seq.append(int(number))
 
     except (ValueError, IndexError):
         print('Provided test sequence "{}" is invalid'.format(arg))
@@ -148,7 +143,23 @@ def _str2ctx(config):
 
 
 class Configurator():
-    """Parser for user test configuration"""
+    """Parser for user test configuration.
+
+    Configuration is generated from two sources: testconfig.py
+    file and main script (RUNTESTS.py or TESTS.py files)
+    command line arguments.
+    Since these sources cannot change during script execution,
+    the configurator class can be initialized multiple times
+    throughout the implementation and always returns the same
+    configuration result.
+
+    Values from testconfig.py are overridden by respective
+    values from command line arguments - provided the latter occur.
+
+    Attributes:
+        config: final test configuration meant to be used by
+            the user
+    """
 
     def __init__(self):
         self.config = self.parse_config()
@@ -244,19 +255,22 @@ class Configurator():
                             nargs='*', help='run tests on a filesystem'
                             ' with specified granularity types.')
         parser.add_argument('-t', dest='test_type',
-                            help='run only specified test type where'
+                            help='run only specified test type where '
                             'check = short + medium',
                             choices=ctx_choices(test_types._TestType),
                             nargs='*')
         parser.add_argument('-o', dest='timeout',
-                            help="set timeout for test execution timeout:"
+                            help="set timeout for test execution timeout: "
                             "integer with an optional suffix:''s' for seconds,"
-                            "'m' for minutes, 'h' for hours or 'd' for days.")
+                            " 'm' for minutes, 'h' for hours or 'd' for days.")
         parser.add_argument('-u', dest='test_sequence',
                             help='run only tests from specified test sequence '
                             'e.g.: 0-2,5 will execute TEST0, '
                             'TEST1, TEST2 and TEST5',
                             default='')
+        parser.add_argument('--list-testcases', dest='list_testcases',
+                            action='store_const', const=True,
+                            help='List testcases only')
         parser.add_argument('--fail-on-skip', dest='fail_on_skip',
                             action='store_const', const=True,
                             help='Skipping tests also fail')

@@ -4,20 +4,20 @@
 
 #
 # build-local.sh - runs a Docker container from a Docker image with environment
-#                  prepared for building PMDK project and starts building PMDK
+#                  prepared for building PMDK project and starts building PMDK.
 #
-# this script is for building PMDK locally (not on Travis)
+# This script is for building PMDK locally (not on CI).
 #
 # Notes:
 # - run this script from its location or set the variable 'HOST_WORKDIR' to
-#   where the root of the PMDK project is on the host machine,
+#   where the root of the PMDK project is on the host machine.
 # - set variables 'OS' and 'OS_VER' properly to a system you want to build PMDK
 #   on (for proper values take a look on the list of Dockerfiles at the
 #   utils/docker/images directory), eg. OS=ubuntu, OS_VER=16.04.
 # - set 'KEEP_TEST_CONFIG' variable to 1 if you do not want the tests to be
-#   reconfigured (your current test configuration will be preserved and used)
+#   reconfigured (your current test configuration will be preserved and used).
 # - tests with Device Dax are not supported by pcheck yet, so do not provide
-#   these devices in your configuration
+#   these devices in your configuration.
 #
 
 set -e
@@ -34,12 +34,17 @@ export PMDK_CC=${PMDK_CC:-gcc}
 export PMDK_CXX=${PMDK_CXX:-g++}
 export EXPERIMENTAL=${EXPERIMENTAL:-n}
 export VALGRIND=${VALGRIND:-1}
-export DOCKERHUB_REPO=${DOCKERHUB_REPO:-pmem/pmdk}
+export DOCKER_REPO=${DOCKER_REPO:-ghcr.io/pmem/pmdk}
 export GITHUB_REPO=${GITHUB_REPO:-pmem/pmdk}
 
-if [[ -z "$OS" || -z "$OS_VER" ]]; then
-	echo "ERROR: The variables OS and OS_VER have to be set " \
-		"(eg. OS=ubuntu, OS_VER=16.04)."
+if [[ -z "$IMG_VER" ]]; then
+	# set the IMG_VER variable - version of Docker images
+	source $(dirname $0)/images/set-images-version.sh
+fi
+
+if [[ -z "$OS" || -z "$OS_VER" || -z "$IMG_VER" ]]; then
+	echo "ERROR: The variables OS, OS_VER and IMG_VER have to be set " \
+		"(eg. OS=ubuntu, OS_VER=16.04, IMG_VER=1.10)."
 	exit 1
 fi
 
@@ -51,7 +56,7 @@ if [[ "$KEEP_CONTAINER" != "1" ]]; then
 	RM_SETTING=" --rm"
 fi
 
-imageName=${DOCKERHUB_REPO}:1.9-${OS}-${OS_VER}-${CI_CPU_ARCH}
+imageName=${DOCKER_REPO}:${IMG_VER}-${OS}-${OS_VER}-${CI_CPU_ARCH}
 containerName=pmdk-${OS}-${OS_VER}
 
 if [[ $MAKE_PKG -eq 1 ]] ; then
@@ -74,8 +79,15 @@ echo Building ${OS}-${OS_VER}
 # Run a container with
 #  - environment variables set (--env)
 #  - host directory containing PMDK source mounted (-v)
+#  - a tmpfs /tmp with the necessary size and permissions (--tmpfs)*
 #  - working directory set (-w)
-docker run --privileged=true --name=$containerName -ti \
+#
+# * We need a tmpfs /tmp inside docker but we cannot run it with --privileged
+#   and do it from inside, so we do using this docker-run option.
+#   By default --tmpfs add nosuid,nodev,noexec to the mount flags, we don't
+#   want that and just to make sure we add the usually default rw,relatime just
+#   in case docker change the defaults.
+docker run --name=$containerName -ti \
 	$RM_SETTING \
 	$DNS_SETTING \
 	--env http_proxy=$http_proxy \
@@ -94,7 +106,9 @@ docker run --privileged=true --name=$containerName -ti \
 	--env SCRIPTSDIR=$SCRIPTSDIR \
 	--env KEEP_TEST_CONFIG=$KEEP_TEST_CONFIG \
 	--env CI_RUN=$CI_RUN \
+	--env BLACKLIST_FILE=$BLACKLIST_FILE \
 	$ndctl_enable \
+	--tmpfs /tmp:rw,relatime,suid,dev,exec,size=6G \
 	-v $HOST_WORKDIR:$WORKDIR \
 	-v /etc/localtime:/etc/localtime \
 	$DAX_SETTING \

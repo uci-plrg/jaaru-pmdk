@@ -1,27 +1,25 @@
 # SPDX-License-Identifier: BSD-3-Clause
 # Copyright 2019-2020, Intel Corporation
 
-"""Utilities for tests"""
+"""Utilities for tests. Meant to be used by test user."""
 
 import sys
 import platform
 
-HEADER_SIZE = 4096
-
-#
-# KiB, MiB, GiB ... -- byte unit prefixes
-#
-KiB = 2 ** 10
-MiB = 2 ** 20
-GiB = 2 ** 30
-TiB = 2 ** 40
-PiB = 2 ** 50
+import consts as c
 
 
 def require_architectures(*archs):
     """Enable test only for specified architectures"""
     def wrapped(tc):
-        if platform.machine() not in archs:
+        this_arch = platform.machine()
+
+        # normalize this_arch value
+        for normalized, possible in c.NORMALIZED_ARCHS.items():
+            if this_arch in possible:
+                this_arch = normalized
+
+        if this_arch not in archs:
             tc.enabled = False
         return tc
 

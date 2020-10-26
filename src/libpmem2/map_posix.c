@@ -21,6 +21,7 @@
 #include "persist.h"
 #include "pmem2_utils.h"
 #include "source.h"
+#include "sys_util.h"
 #include "valgrind_internal.h"
 
 #ifndef MAP_SYNC
@@ -107,7 +108,8 @@ get_map_alignment(size_t len, size_t req_align)
  * 1GB alignment, it results in 1024 possible locations.
  */
 static int
-map_reserve(size_t len, size_t alignment, void **reserv, size_t *reslen)
+map_reserve(size_t len, size_t alignment, void **reserv, size_t *reslen,
+		const struct pmem2_config *cfg)
 {
 	ASSERTne(reserv, NULL);
 
@@ -123,6 +125,10 @@ map_reserve(size_t len, size_t alignment, void **reserv, size_t *reslen)
 	char *daddr = mmap(NULL, dlength, PROT_READ,
 			MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
 	if (daddr == MAP_FAILED) {
+		if (errno == EEXIST) {
+			ERR("!mmap MAP_FIXED_NOREPLACE");
+			return PMEM2_E_MAPPING_EXISTS;
+		}
 		ERR("!mmap MAP_ANONYMOUS");
 		return PMEM2_E_ERRNO;
 	}
@@ -196,6 +202,21 @@ file_map(void *reserv, size_t len, int proto, int flags,
 	ASSERTne(map_sync, NULL);
 	ASSERTne(base, NULL);
 
+	/*
+	 * MAP_PRIVATE and MAP_SHARED are mutually exclusive, therefore mmap
+	 * with MAP_PRIVATE is executed separately.
+	 */
+	if (flags & MAP_PRIVATE) {
+		*base = mmap(reserv, len, proto, flags, fd, offset);
+		if (*base == MAP_FAILED) {
+			ERR("!mmap");
+			return PMEM2_E_ERRNO;
+		}
+		LOG(4, "mmap with MAP_PRIVATE succeeded");
+		*map_sync = false;
+		return 0;
+	}
+
 	/* try to mmap with MAP_SYNC flag */
 	const int sync_flags = MAP_SHARED_VALIDATE | MAP_SYNC;
 	*base = mmap(reserv, len, proto, flags | sync_flags, fd, offset);
@@ -236,20 +257,42 @@ unmap(void *addr, size_t len)
 }
 
 /*
- * pmem2_map -- map memory according to provided config
+ * vm_reservation_mend -- replaces the given mapping with anonymous
+ *                        reservation, mending the reservation area
+ */
+static int
+vm_reservation_mend(struct pmem2_vm_reservation *rsv, void *addr, size_t size)
+{
+	void *rsv_addr = pmem2_vm_reservation_get_address(rsv);
+	size_t rsv_size = pmem2_vm_reservation_get_size(rsv);
+
+	ASSERT((char *)addr >= (char *)rsv_addr &&
+			(char *)addr + size <= (char *)rsv_addr + rsv_size);
+
+	char *daddr = mmap(addr, size, PROT_NONE,
+			MAP_PRIVATE | MAP_ANONYMOUS | MAP_FIXED, -1, 0);
+	if (daddr == MAP_FAILED) {
+		ERR("!mmap MAP_ANONYMOUS");
+		return PMEM2_E_ERRNO;
+	}
+
+	return 0;
+}
+
+/*
+ * pmem2_map_new -- map memory according to provided config
  */
 int
-pmem2_map(const struct pmem2_config *cfg, const struct pmem2_source *src,
-	struct pmem2_map **map_ptr)
+pmem2_map_new(struct pmem2_map **map_ptr, const struct pmem2_config *cfg,
+		const struct pmem2_source *src)
 {
 	LOG(3, "cfg %p src %p map_ptr %p", cfg, src, map_ptr);
+	PMEM2_ERR_CLR();
 
 	int ret = 0;
 	struct pmem2_map *map;
 	size_t file_len;
 	*map_ptr = NULL;
-
-	ASSERTne(src->fd, INVALID_FD);
 
 	if (cfg->requested_max_granularity == PMEM2_GRANULARITY_INVALID) {
 		ERR(
@@ -268,42 +311,54 @@ pmem2_map(const struct pmem2_config *cfg, const struct pmem2_source *src,
 	if (ret)
 		return ret;
 
-	/* get file type */
-	enum pmem2_file_type file_type;
-	os_stat_t st;
-	if (os_fstat(src->fd, &st)) {
-		ERR("!fstat");
-		return PMEM2_E_ERRNO;
-	}
-	ret = pmem2_get_type_from_stat(&st, &file_type);
-	if (ret)
-		return ret;
-
 	/* get offset */
-	size_t offset;
-	ret = pmem2_validate_offset(cfg, &offset, src_alignment);
+	size_t effective_offset;
+	ret = pmem2_validate_offset(cfg, &effective_offset, src_alignment);
 	if (ret)
 		return ret;
-	os_off_t off = (os_off_t)offset;
+	ASSERTeq(effective_offset, cfg->offset);
 
-	ASSERTeq((size_t)off, cfg->offset);
+	if (src->type == PMEM2_SOURCE_ANON)
+		effective_offset = 0;
+
+	os_off_t off = (os_off_t)effective_offset;
 
 	/* map input and output variables */
-	bool map_sync;
+	bool map_sync = false;
 	/*
 	 * MAP_SHARED - is required to mmap directly the underlying hardware
 	 * MAP_FIXED - is required to mmap at exact address pointed by hint
 	 */
 	int flags = MAP_FIXED;
-	int proto = PROT_READ | PROT_WRITE;
 	void *addr;
 
-	if (file_type == PMEM2_FTYPE_DIR) {
-		ERR("the directory is not a supported file type");
-		return PMEM2_E_INVALID_FILE_TYPE;
-	}
+	/* "translate" pmem2 protection flags into linux flags */
+	int proto = 0;
+	if (cfg->protection_flag == PMEM2_PROT_NONE)
+		proto = PROT_NONE;
+	if (cfg->protection_flag & PMEM2_PROT_EXEC)
+		proto |= PROT_EXEC;
+	if (cfg->protection_flag & PMEM2_PROT_READ)
+		proto |= PROT_READ;
+	if (cfg->protection_flag & PMEM2_PROT_WRITE)
+		proto |= PROT_WRITE;
 
-	ASSERT(file_type == PMEM2_FTYPE_REG || file_type == PMEM2_FTYPE_DEVDAX);
+	if (src->type == PMEM2_SOURCE_FD) {
+		if (src->value.ftype == PMEM2_FTYPE_DIR) {
+			ERR("the directory is not a supported file type");
+			return PMEM2_E_INVALID_FILE_TYPE;
+		}
+
+		ASSERT(src->value.ftype == PMEM2_FTYPE_REG ||
+			src->value.ftype == PMEM2_FTYPE_DEVDAX);
+
+		if (cfg->sharing == PMEM2_PRIVATE &&
+			src->value.ftype == PMEM2_FTYPE_DEVDAX) {
+			ERR(
+			"device DAX does not support mapping with MAP_PRIVATE");
+			return PMEM2_E_SRC_DEVDAX_PRIVATE;
+		}
+	}
 
 	size_t content_length, reserved_length = 0;
 	ret = pmem2_config_validate_length(cfg, file_len, src_alignment);
@@ -314,39 +369,111 @@ pmem2_map(const struct pmem2_config *cfg, const struct pmem2_source *src,
 	if (cfg->length)
 		content_length = cfg->length;
 	else
-		content_length = file_len - cfg->offset;
+		content_length = file_len - effective_offset;
 
-	const size_t alignment = get_map_alignment(content_length,
+	size_t alignment = get_map_alignment(content_length,
 			src_alignment);
 
-	/* find a hint for the mapping */
-	void *reserv = NULL;
-	ret = map_reserve(content_length, alignment, &reserv, &reserved_length);
-	if (ret != 0) {
-		LOG(1, "cannot find a contiguous region of given size");
-		return ret;
-	}
-	ASSERTne(reserv, NULL);
+	void *reserv_region = NULL;
+	void *rsv = cfg->reserv;
+	if (rsv) {
+		void *rsv_addr = pmem2_vm_reservation_get_address(rsv);
+		size_t rsv_size = pmem2_vm_reservation_get_size(rsv);
+		size_t rsv_offset = cfg->reserv_offset;
 
-	ret = file_map(reserv, content_length, proto, flags, src->fd, off,
+		reserved_length = roundup(content_length, Pagesize);
+
+		if (rsv_offset % Mmap_align) {
+			ret = PMEM2_E_OFFSET_UNALIGNED;
+			ERR(
+				"virtual memory reservation offset %zu is not a multiple of %llu",
+					rsv_offset, Mmap_align);
+			return ret;
+		}
+
+		if (rsv_offset + reserved_length > rsv_size) {
+			ret = PMEM2_E_LENGTH_OUT_OF_RANGE;
+			ERR(
+				"Reservation %p has not enough space for the intended content",
+					rsv);
+			return ret;
+		}
+
+		reserv_region = (char *)rsv_addr + rsv_offset;
+		if ((size_t)reserv_region % alignment) {
+			ret = PMEM2_E_ADDRESS_UNALIGNED;
+			ERR(
+				"base mapping address %p (virtual memory reservation address + offset)" \
+				" is not a multiple of %zu required by device DAX",
+					reserv_region, alignment);
+			return ret;
+		}
+
+		/* check if the region in the reservation is occupied */
+		if (vm_reservation_map_find_acquire(rsv, rsv_offset,
+				reserved_length)) {
+			ret = PMEM2_E_MAPPING_EXISTS;
+			ERR(
+				"region of the reservation %p at the offset %zu and "
+				"length %zu is at least partly occupied by other mapping",
+				rsv, rsv_offset, reserved_length);
+			goto err_reservation_release;
+		}
+	} else {
+		/* find a hint for the mapping */
+		ret = map_reserve(content_length, alignment, &reserv_region,
+				&reserved_length, cfg);
+		if (ret != 0) {
+			if (ret == PMEM2_E_MAPPING_EXISTS)
+				LOG(1,
+					"given mapping region is already occupied");
+			else
+				LOG(1,
+					"cannot find a contiguous region of given size");
+			return ret;
+		}
+	}
+
+	ASSERTne(reserv_region, NULL);
+
+	if (cfg->sharing == PMEM2_PRIVATE) {
+		flags |= MAP_PRIVATE;
+	}
+
+	int map_fd = INVALID_FD;
+	if (src->type == PMEM2_SOURCE_FD) {
+		map_fd = src->value.fd;
+	} else if (src->type == PMEM2_SOURCE_ANON) {
+		flags |= MAP_ANONYMOUS;
+	} else {
+		ASSERT(0);
+	}
+
+	ret = file_map(reserv_region, content_length, proto, flags, map_fd, off,
 			&map_sync, &addr);
-	if (ret == -EACCES) {
-		proto = PROT_READ;
-		ret = file_map(reserv, content_length, proto, flags, src->fd,
-				off, &map_sync, &addr);
-	}
-
 	if (ret) {
-		/* unmap the reservation mapping */
-		munmap(reserv, reserved_length);
-		return ret;
+		/*
+		 * unmap the reservation mapping only
+		 * if it wasn't provided by the config
+		 */
+		if (!rsv)
+			munmap(reserv_region, reserved_length);
+
+		if (ret == -EACCES)
+			ret = PMEM2_E_NO_ACCESS;
+		else if (ret == -ENOTSUP)
+			ret = PMEM2_E_NOSUPP;
+		else if (ret == -EEXIST)
+			ret =  PMEM2_E_MAPPING_EXISTS;
+		goto err_reservation_release;
 	}
 
 	LOG(3, "mapped at %p", addr);
 
 	bool eADR = (pmem2_auto_flush() == 1);
 	enum pmem2_granularity available_min_granularity =
-		get_min_granularity(eADR, map_sync);
+		src->type == PMEM2_SOURCE_ANON ? PMEM2_GRANULARITY_BYTE :
+		get_min_granularity(eADR, map_sync, cfg->sharing);
 
 	if (available_min_granularity > cfg->requested_max_granularity) {
 		const char *err = granularity_err_msg
@@ -360,13 +487,13 @@ pmem2_map(const struct pmem2_config *cfg, const struct pmem2_source *src,
 				cfg->requested_max_granularity);
 		ERR("%s", err);
 		ret = PMEM2_E_GRANULARITY_NOT_SUPPORTED;
-		goto err;
+		goto err_undo_mapping;
 	}
 
 	/* prepare pmem2_map structure */
 	map = (struct pmem2_map *)pmem2_malloc(sizeof(*map), &ret);
 	if (!map)
-		goto err;
+		goto err_undo_mapping;
 
 	map->addr = addr;
 	map->reserved_length = reserved_length;
@@ -374,49 +501,109 @@ pmem2_map(const struct pmem2_config *cfg, const struct pmem2_source *src,
 	map->effective_granularity = available_min_granularity;
 	pmem2_set_flush_fns(map);
 	pmem2_set_mem_fns(map);
+	map->reserv = rsv;
+	map->source = *src;
+	map->source.value.fd = INVALID_FD; /* fd should not be used after map */
 
 	ret = pmem2_register_mapping(map);
-	if (ret)
-		goto err_register;
+	if (ret) {
+		goto err_free_map_struct;
+	}
+
+	if (rsv) {
+		ret = vm_reservation_map_register_release(rsv, map);
+		if (ret)
+			goto err_unregister_map;
+	}
 
 	*map_ptr = map;
 
-	VALGRIND_REGISTER_PMEM_MAPPING(map->addr, map->content_length);
-	VALGRIND_REGISTER_PMEM_FILE(src->fd, map->addr, map->content_length, 0);
+	if (src->type == PMEM2_SOURCE_FD) {
+		VALGRIND_REGISTER_PMEM_MAPPING(map->addr, map->content_length);
+		VALGRIND_REGISTER_PMEM_FILE(src->value.fd,
+			map->addr, map->content_length, 0);
+	}
 
 	return 0;
 
-err_register:
-	free(map);
-err:
-	unmap(addr, reserved_length);
+err_unregister_map:
+	pmem2_unregister_mapping(map);
+err_free_map_struct:
+	Free(map);
+err_undo_mapping:
+	/*
+	 * if the reservation was given by pmem2_config, instead of unmapping,
+	 * we will need to mend the reservation
+	 */
+	if (rsv)
+		vm_reservation_mend(rsv, addr, reserved_length);
+	else
+		unmap(addr, reserved_length);
+err_reservation_release:
+	if (rsv)
+		vm_reservation_release(rsv);
 	return ret;
-
 }
 
 /*
- * pmem2_unmap -- unmap the specified mapping
+ * pmem2_map_delete -- unmap the specified mapping
  */
 int
-pmem2_unmap(struct pmem2_map **map_ptr)
+pmem2_map_delete(struct pmem2_map **map_ptr)
 {
 	LOG(3, "map_ptr %p", map_ptr);
+	PMEM2_ERR_CLR();
 
 	int ret = 0;
 	struct pmem2_map *map = *map_ptr;
+	size_t map_len = map->content_length;
+	void *map_addr = map->addr;
+	struct pmem2_vm_reservation *rsv = map->reserv;
 
 	ret = pmem2_unregister_mapping(map);
 	if (ret)
 		return ret;
 
-	ret = unmap(map->addr, map->reserved_length);
-	if (ret)
-		return ret;
+	/*
+	 * when reserved_length==0 mapping is created by pmem2_map_from_existing
+	 * such mappings are provided by the users and shouldn't be unmapped
+	 * by pmem2.
+	 */
+	if (map->reserved_length) {
+		VALGRIND_REMOVE_PMEM_MAPPING(map_addr, map_len);
 
-	VALGRIND_REMOVE_PMEM_MAPPING(map->addr, map->content_length);
+		if (rsv) {
+			void *rsv_addr = pmem2_vm_reservation_get_address(rsv);
+			size_t rsv_offset = (size_t)map_addr - (size_t)rsv_addr;
+			if (!vm_reservation_map_find_acquire(rsv, rsv_offset,
+					map_len)) {
+				ret = PMEM2_E_MAPPING_NOT_FOUND;
+				goto err_reservation_release;
+			}
+
+			ret = vm_reservation_mend(rsv, map_addr, map_len);
+			if (ret)
+				goto err_reservation_release;
+
+			ret = vm_reservation_map_unregister_release(rsv, map);
+			if (ret)
+				goto err_register_map;
+		} else {
+			ret = unmap(map_addr, map_len);
+			if (ret)
+				goto err_register_map;
+		}
+	}
 
 	Free(map);
 	*map_ptr = NULL;
 
+	return 0;
+
+err_reservation_release:
+	vm_reservation_release(rsv);
+err_register_map:
+	VALGRIND_REGISTER_PMEM_MAPPING(map_addr, map_len);
+	pmem2_register_mapping(map);
 	return ret;
 }

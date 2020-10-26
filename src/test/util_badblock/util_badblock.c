@@ -10,9 +10,8 @@
 #include "util.h"
 #include "out.h"
 #include "set.h"
-#include "os_dimm.h"
-#include "os_badblock.h"
-#include "badblock.h"
+#include "badblocks.h"
+#include "set_badblocks.h"
 #include "fault_injection.h"
 #include "file.h"
 
@@ -35,9 +34,9 @@ do_list(const char *path)
 	if (bbs == NULL)
 		UT_FATAL("!badblocks_new");
 
-	ret = os_badblocks_get(path, bbs);
+	ret = badblocks_get(path, bbs);
 	if (ret)
-		UT_FATAL("!os_badblocks_get");
+		UT_FATAL("!badblocks_get");
 
 	if (bbs->bb_cnt == 0 || bbs->bbv == NULL) {
 		UT_OUT("No bad blocks found.");
@@ -52,7 +51,7 @@ do_list(const char *path)
 
 	unsigned b;
 	for (b = 0; b < bbs->bb_cnt; b++) {
-		UT_OUT("%llu %u",
+		UT_OUT("%zu %zu",
 			/* offset is printed in 512b sectors  */
 			bbs->bbv[b].offset >> 9,
 			/*
@@ -75,8 +74,8 @@ exit_free:
 static void
 do_clear(const char *path)
 {
-	if (os_badblocks_clear_all(path))
-		UT_FATAL("!os_badblocks_clear_all: %s", path);
+	if (badblocks_clear_all(path))
+		UT_FATAL("!badblocks_clear_all: %s", path);
 }
 
 /*

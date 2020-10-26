@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: BSD-3-Clause
-# Copyright 2015-2019, Intel Corporation
+# Copyright 2015-2020, Intel Corporation
 
 #
 # src/test/tools/Makefile -- build unit test helpers
@@ -27,6 +27,11 @@ DIRS = \
        usc_permission_check\
        anonymous_mmap
 
+ifeq ($(ARCH), x86_64)
+DIRS += \
+	cpufd
+endif
+
 REMOTE_TOOLS = \
 	ctrld\
 	extents\
@@ -53,6 +58,6 @@ sync-remotes: $(REMOTE_TOOLS) $(TESTCONFIG)
 $(DIRS):
 	$(MAKE) -C $@ $(TARGET)
 
-check pcheck: all
+check pcheck pycheck: all
 
 .PHONY: all clean clobber cstyle format check pcheck $(DIRS)

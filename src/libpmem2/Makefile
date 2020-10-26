@@ -13,27 +13,43 @@ LIBRARY_VERSION = 0.0
 SOURCE =\
 	$(COMMON)/ravl.c\
 	libpmem2.c\
+	badblocks.c\
+	badblocks_$(OS_DIMM).c\
 	config.c\
+	deep_flush.c\
 	errormsg.c\
 	memops_generic.c\
 	map.c\
 	map_posix.c\
 	persist.c\
 	persist_posix.c\
-	pmem2.c\
 	pmem2_utils.c\
 	usc_$(OS_DIMM).c\
 	source.c\
-	source_posix.c
+	source_posix.c\
+	vm_reservation.c\
+	vm_reservation_posix.c\
+	ravl_interval.c
 
 ifeq ($(OS_KERNEL_NAME),Linux)
 SOURCE +=\
 	auto_flush_linux.c\
-	pmem2_utils_linux.c
+	deep_flush_linux.c\
+	extent_linux.c\
+	pmem2_utils_linux.c\
+	pmem2_utils_$(OS_DIMM).c
 else
 SOURCE +=\
-	pmem2_utils_other.c\
-	auto_flush_none.c
+	auto_flush_none.c\
+	deep_flush_other.c\
+	extent_none.c\
+	pmem2_utils_other.c
+endif
+
+ifeq ($(OS_DIMM),ndctl)
+SOURCE += region_namespace_ndctl.c
+else
+SOURCE += region_namespace_none.c
 endif
 
 include $(ARCH)/sources.inc

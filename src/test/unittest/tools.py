@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: BSD-3-Clause
-# Copyright 2019, Intel Corporation
+# Copyright 2019-2020, Intel Corporation
 #
 """External tools integration"""
 
@@ -15,7 +15,7 @@ try:
     envconfig = envconfig.config
 except ImportError:
     # if file doesn't exist create dummy object
-    envconfig = {'GLOBAL_LIB_PATH': ''}
+    envconfig = {'GLOBAL_LIB_PATH': '', 'PMEM2_AVX512F_ENABLED': ''}
 
 
 class Tools:
@@ -29,12 +29,12 @@ class Tools:
         global_lib_path = envconfig['GLOBAL_LIB_PATH']
 
         if sys.platform == 'win32':
-            futils.add_env_common(self.env, {'PATH': build.libdir})
             futils.add_env_common(self.env, {'PATH': global_lib_path})
+            futils.add_env_common(self.env, {'PATH': build.libdir})
         else:
-            futils.add_env_common(self.env, {'LD_LIBRARY_PATH': build.libdir})
             futils.add_env_common(self.env,
                                   {'LD_LIBRARY_PATH': global_lib_path})
+            futils.add_env_common(self.env, {'LD_LIBRARY_PATH': build.libdir})
 
     def _run_test_tool(self, name, *args):
         exe = futils.get_test_tool_path(self.build, name)
@@ -50,14 +50,33 @@ class Tools:
     def gran_detecto(self, *args):
         return self._run_test_tool('gran_detecto', *args)
 
+    def cpufd(self):
+        return self._run_test_tool('cpufd')
+
 
 class Ndctl:
-    """ndctl CLI handle"""
+    """ndctl CLI handle
+
+    Attributes:
+        version (str): ndctl version
+        ndctl_list_output (dict): output of 'ndctl list' command
+            decoded from JSON into dictionary
+    """
     def __init__(self):
         self.version = self._get_ndctl_version()
-        self.ndctl_list_output = self._get_ndctl_list_output()
+        self.ndctl_list_output = self._get_ndctl_list_output('list')
 
     def _get_ndctl_version(self):
+        """
+        Get ndctl version.
+
+        Acquiring the version is simultaneously used as a check whether
+        the ndctl is installed on the system.
+
+        Returns:
+            ndctl version (str)
+
+        """
         proc = sp.run(['ndctl', '--version'], stdout=sp.PIPE, stderr=sp.STDOUT)
         if proc.returncode != 0:
             raise futils.Fail('checking if ndctl exists failed:{}{}'
@@ -66,8 +85,12 @@ class Ndctl:
         version = proc.stdout.strip()
         return version
 
-    def _get_ndctl_list_output(self):
-        proc = sp.run(['ndctl', 'list'], stdout=sp.PIPE, stderr=sp.STDOUT)
+    def _get_ndctl_list_output(self, *args):
+        """
+        Parse 'ndctl list' command output as JSON
+        into a dictionary and return it.
+        """
+        proc = sp.run(['ndctl', *args], stdout=sp.PIPE, stderr=sp.STDOUT)
         if proc.returncode != 0:
             raise futils.Fail('ndctl list failed:{}{}'.format(os.linesep,
                                                               proc.stdout))
@@ -79,10 +102,17 @@ class Ndctl:
         return ndctl_list_out
 
     def _get_dev_info(self, dev_path):
+        """
+        Get ndctl information about the given device.
+        Returns dictionary associated with device.
+        """
         dev = None
+
+        # Possible viable device types as shown with
+        # 'ndctl list' output
         devtypes = ('blockdev', 'chardev')
 
-        for d in self.ndctl_list_output:
+        for d in self._get_ndctl_list_output('list'):
             for dt in devtypes:
                 if dt in d and os.path.join('/dev', d[dt]) == dev_path:
                     dev = d
@@ -92,9 +122,47 @@ class Ndctl:
                               .format(dev_path))
         return dev
 
+    # for ndctl v63 we need to parse ndctl list in a different way than for v64
+    def _get_dev_info_63(self, dev_path):
+        dev = None
+        devtype = 'chardev'
+        daxreg = 'daxregion'
+
+        for d in self._get_ndctl_list_output('list', '-v'):
+            if daxreg in d:
+                devices = d[daxreg]['devices']
+                for device in devices:
+                    if devtype in device and \
+                            os.path.join('/dev', device[devtype]) == dev_path:
+                        # only params from daxreg are intrested at this point,
+                        # other values are read by _get_dev_info() earlier
+                        dev = d[daxreg]
+
+        if not dev:
+            raise futils.Fail('ndctl does not recognize the device: "{}"'
+                              .format(dev_path))
+
+        return dev
+
     def _get_dev_param(self, dev_path, param):
+        """
+        Acquire device parameter from 'ndctl list' output.
+
+        Args:
+            dev_path (str): path of device
+            param (str): parameter
+
+        """
+        p = None
         dev = self._get_dev_info(dev_path)
-        return dev[param]
+
+        try:
+            p = dev[param]
+        except KeyError:
+            dev = self._get_dev_info_63(dev_path)
+            p = dev[param]
+
+        return p
 
     def get_dev_size(self, dev_path):
         return int(self._get_dev_param(dev_path, 'size'))

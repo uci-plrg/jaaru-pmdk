@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: BSD-3-Clause
+/* SPDX-License-Identifier: BSD-3-Clause */
 /* Copyright 2016-2020, Intel Corporation */
 
 #ifndef PMDK_CPU_H
@@ -8,6 +8,7 @@
  * cpu.h -- definitions for "cpu" module
  */
 
+int is_cpu_genuine_intel(void);
 int is_cpu_clflush_present(void);
 int is_cpu_clflushopt_present(void);
 int is_cpu_clwb_present(void);

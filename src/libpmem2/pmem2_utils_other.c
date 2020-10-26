@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BSD-3-Clause
-/* Copyright 2014-2019, Intel Corporation */
+/* Copyright 2014-2020, Intel Corporation */
 
 #include <errno.h>
 #include <sys/stat.h>
@@ -31,28 +31,28 @@ pmem2_get_type_from_stat(const os_stat_t *st, enum pmem2_file_type *type)
 }
 
 /*
- * pmem2_device_dax_size_from_stat -- (internal) checks the size of a given
- * dax device from given stat structure
+ * pmem2_device_dax_size -- checks the size of a given
+ * dax device from given source structure
  */
 int
-pmem2_device_dax_size_from_stat(const os_stat_t *st, size_t *size)
+pmem2_device_dax_size(const struct pmem2_source *src, size_t *size)
 {
 	const char *err =
-		"BUG: pmem2_device_dax_size_from_stat should never be called on this OS";
+		"BUG: pmem2_device_dax_size should never be called on this OS";
 	ERR("%s", err);
 	ASSERTinfo(0, err);
 	return PMEM2_E_NOSUPP;
 }
 
 /*
- * pmem2_device_dax_alignment_from_stat -- checks the alignment of a given
- * dax device from given stat structure
+ * pmem2_device_dax_alignment -- checks the alignment of a given
+ * dax device from given source
  */
 int
-pmem2_device_dax_alignment_from_stat(const os_stat_t *st, size_t *alignment)
+pmem2_device_dax_alignment(const struct pmem2_source *src, size_t *alignment)
 {
 	const char *err =
-		"BUG: pmem2_device_dax_alignment_from_stat should never be called on this OS";
+		"BUG: pmem2_device_dax_alignment should never be called on this OS";
 	ERR("%s", err);
 	ASSERTinfo(0, err);
 	return PMEM2_E_NOSUPP;

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # SPDX-License-Identifier: BSD-3-Clause
-# Copyright 2016-2018, Intel Corporation
+# Copyright 2016-2020, Intel Corporation
 #
 #
 # pmempool_sync_remote/common.sh -- pmempool sync with remote replication

@@ -8,17 +8,17 @@ TOP := $(dir $(lastword $(MAKEFILE_LIST)))..
 include $(TOP)/src/common.inc
 
 # core targets
-TARGETS = libpmemblk libpmemlog libpmemobj libpmempool tools
+TARGETS = libpmemblk libpmemlog libpmemobj libpmempool tools libpmem2
 # make all targets
-ALL_TARGETS = $(TARGETS) common core librpmem libpmem2
+ALL_TARGETS = $(TARGETS) common core librpmem libpmemset
 # all available targets
 POSSIBLE_TARGETS = $(TARGETS) common core librpmem rpmem_common test\
-	examples benchmarks libpmem2
+	examples benchmarks libpmemset
 
 SCOPE_DIRS = $(TARGETS) common core librpmem rpmem_common
 
 DEBUG_RELEASE_TARGETS = common core libpmemblk libpmemlog libpmemobj\
-	libpmempool librpmem libpmem2
+	libpmempool librpmem libpmem2 libpmemset
 RELEASE_TARGETS = tools
 
 ifneq ($(BUILD_EXAMPLES),n)
@@ -36,30 +36,25 @@ CLOBBER_TARGETS = $(POSSIBLE_TARGETS)
 CSTYLE_TARGETS = $(POSSIBLE_TARGETS)
 INSTALL_TARGETS = $(TARGETS)
 SPARSE_TARGETS = $(POSSIBLE_TARGETS)
-EXAMPLES_TARGETS = $(TARGETS) librpmem libpmem2
+EXAMPLES_TARGETS = $(TARGETS) librpmem
 
 HEADERS_DESTDIR = $(DESTDIR)$(includedir)
 HEADERS_INSTALL = \
 		include/libpmemobj.h include/libpmempool.h\
-		include/libpmemblk.h include/libpmemlog.h
+		include/libpmemblk.h include/libpmemlog.h\
+		include/libpmem2.h
 
 OBJ_HEADERS_INSTALL = include/libpmemobj/*.h
 
 PKG_CONFIG_DESTDIR = $(DESTDIR)$(pkgconfigdir)
 PKG_CONFIG_COMMON = common.pc
 PKG_CONFIG_FILES = libpmem.pc libpmemobj.pc libpmemlog.pc libpmemblk.pc\
-		libpmempool.pc
+		libpmempool.pc libpmem2.pc
 PMREORDER_BIN = $(DESTDIR)$(bindir)
 PMREORDER_SRC = tools/pmreorder
 PMREORDER_FILES = $(PMREORDER_SRC)/*.py
 PMREORDER_DESTDIR = $(DESTDIR)$(datarootdir)/pmreorder
 PMREORDER_ROOTDIR = $(datarootdir)/pmreorder
-
-ifeq ($(PMEM2_INSTALL),y)
-	PKG_CONFIG_FILES += libpmem2.pc
-	HEADERS_INSTALL += include/libpmem2.h
-	INSTALL_TARGETS += libpmem2
-endif
 
 ifeq ($(BUILD_RPMEM),y)
 	PKG_CONFIG_FILES += librpmem.pc
@@ -116,6 +111,7 @@ custom_build = $(DEBUG)$(OBJDIR)
 tools: libpmemblk libpmemlog libpmemobj libpmempool
 libpmemblk libpmemlog libpmemobj: libpmem
 libpmempool: libpmemblk
+libpmemset: libpmem2
 benchmarks test tools: common core
 
 pkg-cfg-common:

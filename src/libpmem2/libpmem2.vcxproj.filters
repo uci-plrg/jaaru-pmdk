@@ -51,6 +51,9 @@
     <ClCompile Include="auto_flush_windows.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="badblocks_none.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="config.c">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -72,9 +75,6 @@
     <ClCompile Include="persist_windows.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="pmem2.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="pmem2_utils.c">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -87,130 +87,52 @@
     <ClCompile Include="x86_64\init.c">
       <Filter>Source Files\x86_64</Filter>
     </ClCompile>
-    <ClCompile Include="x86_64\memcpy\memcpy_nt_sse2_clflush.c">
+    <ClCompile Include="x86_64\memcpy\memcpy_nt_sse2.c">
       <Filter>Source Files\x86_64</Filter>
     </ClCompile>
-    <ClCompile Include="x86_64\memcpy\memcpy_nt_sse2_clflushopt.c">
+    <ClCompile Include="x86_64\memcpy\memcpy_nt_avx.c">
       <Filter>Source Files\x86_64</Filter>
     </ClCompile>
-    <ClCompile Include="x86_64\memcpy\memcpy_nt_sse2_clwb.c">
+    <ClCompile Include="x86_64\memcpy\memcpy_t_sse2.c">
       <Filter>Source Files\x86_64</Filter>
     </ClCompile>
-    <ClCompile Include="x86_64\memcpy\memcpy_nt_sse2_empty.c">
+    <ClCompile Include="x86_64\memcpy\memcpy_t_avx.c">
       <Filter>Source Files\x86_64</Filter>
     </ClCompile>
-    <ClCompile Include="x86_64\memcpy\memcpy_nt_sse2_noflush.c">
+    <ClCompile Include="x86_64\memset\memset_nt_sse2.c">
       <Filter>Source Files\x86_64</Filter>
     </ClCompile>
-    <ClCompile Include="x86_64\memcpy\memcpy_nt_avx_clflush.c">
+    <ClCompile Include="x86_64\memset\memset_nt_avx.c">
       <Filter>Source Files\x86_64</Filter>
     </ClCompile>
-    <ClCompile Include="x86_64\memcpy\memcpy_nt_avx_clflushopt.c">
+    <ClCompile Include="x86_64\memset\memset_t_sse2.c">
       <Filter>Source Files\x86_64</Filter>
     </ClCompile>
-    <ClCompile Include="x86_64\memcpy\memcpy_nt_avx_clwb.c">
-      <Filter>Source Files\x86_64</Filter>
-    </ClCompile>
-    <ClCompile Include="x86_64\memcpy\memcpy_nt_avx_empty.c">
-      <Filter>Source Files\x86_64</Filter>
-    </ClCompile>
-    <ClCompile Include="x86_64\memcpy\memcpy_nt_avx_noflush.c">
-      <Filter>Source Files\x86_64</Filter>
-    </ClCompile>
-    <ClCompile Include="x86_64\memcpy\memcpy_t_sse2_clflush.c">
-      <Filter>Source Files\x86_64</Filter>
-    </ClCompile>
-    <ClCompile Include="x86_64\memcpy\memcpy_t_sse2_clflushopt.c">
-      <Filter>Source Files\x86_64</Filter>
-    </ClCompile>
-    <ClCompile Include="x86_64\memcpy\memcpy_t_sse2_clwb.c">
-      <Filter>Source Files\x86_64</Filter>
-    </ClCompile>
-    <ClCompile Include="x86_64\memcpy\memcpy_t_sse2_empty.c">
-      <Filter>Source Files\x86_64</Filter>
-    </ClCompile>
-    <ClCompile Include="x86_64\memcpy\memcpy_t_sse2_noflush.c">
-      <Filter>Source Files\x86_64</Filter>
-    </ClCompile>
-    <ClCompile Include="x86_64\memcpy\memcpy_t_avx_clflush.c">
-      <Filter>Source Files\x86_64</Filter>
-    </ClCompile>
-    <ClCompile Include="x86_64\memcpy\memcpy_t_avx_clflushopt.c">
-      <Filter>Source Files\x86_64</Filter>
-    </ClCompile>
-    <ClCompile Include="x86_64\memcpy\memcpy_t_avx_clwb.c">
-      <Filter>Source Files\x86_64</Filter>
-    </ClCompile>
-    <ClCompile Include="x86_64\memcpy\memcpy_t_avx_empty.c">
-      <Filter>Source Files\x86_64</Filter>
-    </ClCompile>
-    <ClCompile Include="x86_64\memcpy\memcpy_t_avx_noflush.c">
-      <Filter>Source Files\x86_64</Filter>
-    </ClCompile>
-    <ClCompile Include="x86_64\memset\memset_nt_sse2_clflush.c">
-      <Filter>Source Files\x86_64</Filter>
-    </ClCompile>
-    <ClCompile Include="x86_64\memset\memset_nt_sse2_clflushopt.c">
-      <Filter>Source Files\x86_64</Filter>
-    </ClCompile>
-    <ClCompile Include="x86_64\memset\memset_nt_sse2_clwb.c">
-      <Filter>Source Files\x86_64</Filter>
-    </ClCompile>
-    <ClCompile Include="x86_64\memset\memset_nt_sse2_empty.c">
-      <Filter>Source Files\x86_64</Filter>
-    </ClCompile>
-    <ClCompile Include="x86_64\memset\memset_nt_sse2_noflush.c">
-      <Filter>Source Files\x86_64</Filter>
-    </ClCompile>
-    <ClCompile Include="x86_64\memset\memset_nt_avx_clflush.c">
-      <Filter>Source Files\x86_64</Filter>
-    </ClCompile>
-    <ClCompile Include="x86_64\memset\memset_nt_avx_clflushopt.c">
-      <Filter>Source Files\x86_64</Filter>
-    </ClCompile>
-    <ClCompile Include="x86_64\memset\memset_nt_avx_clwb.c">
-      <Filter>Source Files\x86_64</Filter>
-    </ClCompile>
-    <ClCompile Include="x86_64\memset\memset_nt_avx_empty.c">
-      <Filter>Source Files\x86_64</Filter>
-    </ClCompile>
-    <ClCompile Include="x86_64\memset\memset_nt_avx_noflush.c">
-      <Filter>Source Files\x86_64</Filter>
-    </ClCompile>
-    <ClCompile Include="x86_64\memset\memset_t_sse2_clflush.c">
-      <Filter>Source Files\x86_64</Filter>
-    </ClCompile>
-    <ClCompile Include="x86_64\memset\memset_t_sse2_clflushopt.c">
-      <Filter>Source Files\x86_64</Filter>
-    </ClCompile>
-    <ClCompile Include="x86_64\memset\memset_t_sse2_clwb.c">
-      <Filter>Source Files\x86_64</Filter>
-    </ClCompile>
-    <ClCompile Include="x86_64\memset\memset_t_sse2_empty.c">
-      <Filter>Source Files\x86_64</Filter>
-    </ClCompile>
-    <ClCompile Include="x86_64\memset\memset_t_sse2_noflush.c">
-      <Filter>Source Files\x86_64</Filter>
-    </ClCompile>
-    <ClCompile Include="x86_64\memset\memset_t_avx_clflush.c">
-      <Filter>Source Files\x86_64</Filter>
-    </ClCompile>
-    <ClCompile Include="x86_64\memset\memset_t_avx_clflushopt.c">
-      <Filter>Source Files\x86_64</Filter>
-    </ClCompile>
-    <ClCompile Include="x86_64\memset\memset_t_avx_clwb.c">
-      <Filter>Source Files\x86_64</Filter>
-    </ClCompile>
-    <ClCompile Include="x86_64\memset\memset_t_avx_empty.c">
-      <Filter>Source Files\x86_64</Filter>
-    </ClCompile>
-    <ClCompile Include="x86_64\memset\memset_t_avx_noflush.c">
+    <ClCompile Include="x86_64\memset\memset_t_avx.c">
       <Filter>Source Files\x86_64</Filter>
     </ClCompile>
     <ClCompile Include="source.c">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="source_windows.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="deep_flush_windows.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="deep_flush.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="pmem2_utils_other.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="vm_reservation.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ravl_interval.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="vm_reservation_windows.c">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -242,43 +164,7 @@
     <ClInclude Include="x86_64\memcpy\memcpy_avx512f.h">
       <Filter>Header Files\x86_64</Filter>
     </ClInclude>
-    <ClInclude Include="x86_64\memcpy\memcpy_nt_avx.h">
-      <Filter>Header Files\x86_64</Filter>
-    </ClInclude>
-    <ClInclude Include="x86_64\memcpy\memcpy_nt_avx512f.h">
-      <Filter>Header Files\x86_64</Filter>
-    </ClInclude>
-    <ClInclude Include="x86_64\memcpy\memcpy_nt_sse2.h">
-      <Filter>Header Files\x86_64</Filter>
-    </ClInclude>
-    <ClInclude Include="x86_64\memcpy\memcpy_t_avx.h">
-      <Filter>Header Files\x86_64</Filter>
-    </ClInclude>
-    <ClInclude Include="x86_64\memcpy\memcpy_t_avx512f.h">
-      <Filter>Header Files\x86_64</Filter>
-    </ClInclude>
-    <ClInclude Include="x86_64\memcpy\memcpy_t_sse2.h">
-      <Filter>Header Files\x86_64</Filter>
-    </ClInclude>
     <ClInclude Include="x86_64\memset\memset_avx512f.h">
-      <Filter>Header Files\x86_64</Filter>
-    </ClInclude>
-    <ClInclude Include="x86_64\memset\memset_nt_avx.h">
-      <Filter>Header Files\x86_64</Filter>
-    </ClInclude>
-    <ClInclude Include="x86_64\memset\memset_nt_avx512f.h">
-      <Filter>Header Files\x86_64</Filter>
-    </ClInclude>
-    <ClInclude Include="x86_64\memset\memset_nt_sse2.h">
-      <Filter>Header Files\x86_64</Filter>
-    </ClInclude>
-    <ClInclude Include="x86_64\memset\memset_t_avx.h">
-      <Filter>Header Files\x86_64</Filter>
-    </ClInclude>
-    <ClInclude Include="x86_64\memset\memset_t_avx512f.h">
-      <Filter>Header Files\x86_64</Filter>
-    </ClInclude>
-    <ClInclude Include="x86_64\memset\memset_t_sse2.h">
       <Filter>Header Files\x86_64</Filter>
     </ClInclude>
     <ClInclude Include="x86_64\memset\memset_avx.h">
@@ -306,6 +192,21 @@
       <Filter>Header Files\x86_64</Filter>
     </ClInclude>
     <ClInclude Include="source.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="deep_flush.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="persist.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="config.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ravl_interval.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="vm_reservation.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BSD-3-Clause
-/* Copyright 2015-2019, Intel Corporation */
+/* Copyright 2015-2020, Intel Corporation */
 
 /*
  * blk.cpp -- pmemblk benchmarks definitions
@@ -12,6 +12,7 @@
 #include "libpmempool.h"
 #include "os.h"
 #include "poolset_util.hpp"
+#include "rand.h"
 #include <cassert>
 #include <cerrno>
 #include <cstdint>
@@ -54,9 +55,9 @@ typedef int (*worker_fn)(struct blk_bench *, struct benchmark_args *,
  * blk_args -- benchmark specific arguments
  */
 struct blk_args {
-	size_t fsize;   /* requested file size */
+	size_t fsize;	/* requested file size */
 	bool no_warmup; /* don't do warmup */
-	unsigned seed;  /* seed for randomization */
+	unsigned seed;	/* seed for randomization */
 	char *type_str; /* type: blk, file, memcpy */
 	char *mode_str; /* mode: stat, seq, rand */
 };
@@ -65,12 +66,12 @@ struct blk_args {
  * blk_bench -- pmemblk benchmark context
  */
 struct blk_bench {
-	PMEMblkpool *pbp;	 /* pmemblk handle */
+	PMEMblkpool *pbp;	  /* pmemblk handle */
 	char *addr;		  /* address of user data (memcpy) */
 	int fd;			  /* file descr. for file io */
 	size_t nblocks;		  /* actual number of blocks */
 	size_t blocks_per_thread; /* number of blocks per thread */
-	worker_fn worker;	 /* worker function */
+	worker_fn worker;	  /* worker function */
 	enum op_type type;
 	enum op_mode mode;
 };
@@ -80,8 +81,8 @@ struct blk_bench {
  */
 struct blk_worker {
 	os_off_t *blocks; /* array with block numbers */
-	char *buff;       /* buffer for read/write */
-	unsigned seed;    /* worker seed */
+	char *buff;	  /* buffer for read/write */
+	rng_t rng;	  /* worker RNG state */
 };
 
 /*
@@ -285,7 +286,7 @@ blk_init_worker(struct benchmark *bench, struct benchmark_args *args,
 	auto *bb = (struct blk_bench *)pmembench_get_priv(bench);
 	auto *bargs = (struct blk_args *)args->opts;
 
-	bworker->seed = os_rand_r(&bargs->seed);
+	randomize_r(&bworker->rng, bargs->seed);
 
 	bworker->buff = (char *)malloc(args->dsize);
 	if (!bworker->buff) {
@@ -294,7 +295,7 @@ blk_init_worker(struct benchmark *bench, struct benchmark_args *args,
 	}
 
 	/* fill buffer with some random data */
-	memset(bworker->buff, bworker->seed, args->dsize);
+	memset(bworker->buff, (char)rnd64_r(&bworker->rng), args->dsize);
 
 	assert(args->n_ops_per_thread != 0);
 	bworker->blocks = (os_off_t *)malloc(sizeof(*bworker->blocks) *
@@ -309,7 +310,7 @@ blk_init_worker(struct benchmark *bench, struct benchmark_args *args,
 			for (size_t i = 0; i < args->n_ops_per_thread; i++) {
 				bworker->blocks[i] =
 					worker->index * bb->blocks_per_thread +
-					os_rand_r(&bworker->seed) %
+					rnd64_r(&bworker->rng) %
 						bb->blocks_per_thread;
 			}
 			break;

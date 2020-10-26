@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BSD-3-Clause
-/* Copyright 2015-2018, Intel Corporation */
+/* Copyright 2015-2020, Intel Corporation */
 
 /*
  * pmemobj_tx.cpp -- pmemobj_tx_alloc(), pmemobj_tx_free(),
@@ -153,30 +153,30 @@ struct obj_tx_args {
 	unsigned nested;    /* number of nested transactions */
 	unsigned min_size;  /* minimum allocation size */
 	unsigned min_rsize; /* minimum reallocation size */
-	unsigned rsize;     /* reallocation size */
+	unsigned rsize;	    /* reallocation size */
 	bool change_type;   /* change type number in reallocation */
 	size_t obj_size;    /* size of each allocated object */
-	size_t n_ops;       /* number of operations */
-	int parse_mode;     /* type of parsing function */
+	size_t n_ops;	    /* number of operations */
+	int parse_mode;	    /* type of parsing function */
 };
 
 /*
  * obj_tx_bench -- stores variables used in benchmark, passed within functions.
  */
 static struct obj_tx_bench {
-	PMEMobjpool *pop;	     /* handle to persistent pool */
+	PMEMobjpool *pop;	      /* handle to persistent pool */
 	struct obj_tx_args *obj_args; /* pointer to benchmark arguments */
-	size_t *random_types;	 /* array to store random type numbers */
-	size_t *sizes;      /* array to store size of each allocation */
+	size_t *random_types;	      /* array to store random type numbers */
+	size_t *sizes;	    /* array to store size of each allocation */
 	size_t *resizes;    /* array to store size of each reallocation */
-	size_t n_objs;      /* number of objects to allocate */
-	int type_mode;      /* type number mode */
-	int op_mode;	/* type of operation */
-	int lib_mode;       /* type of operation used in initialization */
-	int lib_op;	 /* type of main operation */
+	size_t n_objs;	    /* number of objects to allocate */
+	int type_mode;	    /* type number mode */
+	int op_mode;	    /* type of operation */
+	int lib_mode;	    /* type of operation used in initialization */
+	int lib_op;	    /* type of main operation */
 	int lib_op_free;    /* type of main operation */
 	int nesting_mode;   /* type of nesting in main operation */
-	fn_num_t n_oid;     /* returns object's number in array */
+	fn_num_t n_oid;	    /* returns object's number in array */
 	fn_os_off_t fn_off; /* returns offset for proper operation */
 
 	/*
@@ -365,12 +365,24 @@ realloc_tx(struct obj_tx_bench *obj_bench, struct worker_info *worker,
 	size_t type_num = obj_bench->fn_type_num(obj_bench, worker->index, idx);
 	if (obj_bench->obj_args->change_type)
 		type_num++;
-	obj_worker->oids[idx].oid = pmemobj_tx_realloc(
-		obj_worker->oids[idx].oid, obj_bench->sizes[idx], type_num);
-	if (OID_IS_NULL(obj_worker->oids[idx].oid)) {
+	PMEMoid oid = pmemobj_tx_realloc(obj_worker->oids[idx].oid,
+					 obj_bench->sizes[idx], type_num);
+	if (OID_IS_NULL(oid)) {
 		perror("pmemobj_tx_realloc");
 		return -1;
 	}
+
+	/*
+	 * If OP_MODE_ABORT is set, this TX will get aborted, meaning that the
+	 * object allocated as part of the outer transaction will be freed once
+	 * this operation finishes.
+	 * To avoid a potential use-after-free, we either have to snapshot the
+	 * oid pointer or skip this assignment when we know it will abort.
+	 * For performance reason, this code does the latter.
+	 */
+	if (obj_bench->op_mode != OP_MODE_ABORT)
+		obj_worker->oids[idx].oid = oid;
+
 	return 0;
 }
 

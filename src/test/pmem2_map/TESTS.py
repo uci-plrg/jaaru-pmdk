@@ -68,124 +68,151 @@ class TEST3(PMEM2_MAP_DEVDAX):
 
 
 class TEST4(PMEM2_MAP):
-    """map a O_WRONLY file"""
-    test_case = "test_map_wronly_file"
-    with_size = False
-
-
-class TEST5(PMEM2_MAP_DEVDAX):
-    """DevDax map a O_WRONLY file"""
-    test_case = "test_map_wronly_file"
-    with_size = False
-
-
-class TEST6(PMEM2_MAP):
     """map valid memory ranges"""
     test_case = "test_map_valid_ranges"
 
 
-class TEST7(PMEM2_MAP_DEVDAX):
+class TEST5(PMEM2_MAP_DEVDAX):
     """DevDax map valid memory ranges"""
     test_case = "test_map_valid_ranges"
 
 
-class TEST8(PMEM2_MAP):
+class TEST6(PMEM2_MAP):
     """map invalid memory ranges"""
     test_case = "test_map_invalid_ranges"
 
 
-class TEST9(PMEM2_MAP_DEVDAX):
+class TEST7(PMEM2_MAP_DEVDAX):
     """DevDax map invalid memory ranges"""
     test_case = "test_map_invalid_ranges"
 
 
-class TEST10(PMEM2_MAP):
+class TEST8(PMEM2_MAP):
     """map using invalid alignment in the offset"""
     test_case = "test_map_invalid_alignment"
 
 
-class TEST11(PMEM2_MAP_DEVDAX):
+class TEST9(PMEM2_MAP_DEVDAX):
     """DevDax map using invalid alignment in the offset"""
     test_case = "test_map_invalid_alignment"
 
 
-class TEST12(PMEM2_MAP):
+class TEST10(PMEM2_MAP):
     """map using a invalid file descriptor"""
     test_case = "test_map_invalid_fd"
 
 
-class TEST13(PMEM2_MAP):
+class TEST11(PMEM2_MAP):
     """unmap valid pmem2 mapping"""
     test_case = "test_unmap_valid"
 
 
-class TEST14(PMEM2_MAP_DEVDAX):
+class TEST12(PMEM2_MAP_DEVDAX):
     """DevDax unmap valid pmem2 mapping"""
     test_case = "test_unmap_valid"
 
 
-# UnmapViewOfFile does not use length
-@t.windows_exclude
-class TEST15(PMEM2_MAP):
+class TEST13(PMEM2_MAP):
     """unmap a pmem2 mapping with an invalid length"""
     test_case = "test_unmap_zero_length"
 
 
-class TEST16(PMEM2_MAP_DEVDAX):
+class TEST14(PMEM2_MAP_DEVDAX):
     """DevDax unmap a pmem2 mapping with an invalid length"""
     test_case = "test_unmap_zero_length"
 
 
 # UnmapViewOfFile does not care about the address alignment
 @t.windows_exclude
-class TEST17(PMEM2_MAP):
+class TEST15(PMEM2_MAP):
     """unmap a pmem2 mapping with an unaligned address"""
     test_case = "test_unmap_unaligned_addr"
 
 
-class TEST18(PMEM2_MAP_DEVDAX):
+class TEST16(PMEM2_MAP_DEVDAX):
     """DevDax unmap a pmem2 mapping with an unaligned address"""
     test_case = "test_unmap_unaligned_addr"
 
 
 # munmap does not fail if the mapping does not exist
 @t.windows_only
-class TEST19(PMEM2_MAP):
+class TEST17(PMEM2_MAP):
     """double unmap a pmem2 mapping"""
     test_case = "test_unmap_unmapped"
 
 
-class TEST20(PMEM2_MAP_NO_FILE):
+class TEST18(PMEM2_MAP_NO_FILE):
     """test for pmem2_map_get_address"""
     test_case = "test_map_get_address"
 
 
-class TEST21(PMEM2_MAP_NO_FILE):
+class TEST19(PMEM2_MAP_NO_FILE):
     """test for pmem2_map_get_size"""
     test_case = "test_map_get_size"
 
 
-class TEST22(PMEM2_MAP_NO_FILE):
+class TEST20(PMEM2_MAP_NO_FILE):
     """simply get the previously stored value of granularity"""
     test_case = "test_get_granularity_simple"
 
 
-class TEST23(PMEM2_MAP):
+class TEST21(PMEM2_MAP):
     """map a file of length which is not page-aligned"""
     test_case = "test_map_unaligned_length"
     filesize = 3 * t.KiB
 
 
-class TEST24(PMEM2_MAP):
+class TEST22(PMEM2_MAP):
     """map a file which size is not aligned"""
     test_case = "test_map_larger_than_unaligned_file_size"
     filesize = 16 * t.MiB - 1
 
 
-class TEST25(PMEM2_MAP):
+class TEST23(PMEM2_MAP):
     """
     map a file with zero size, do not provide length
     to pmem2_map config
     """
     test_case = "test_map_zero_file_size"
     filesize = 0
+
+
+class TEST24(PMEM2_MAP):
+    """
+    map a file with PMEM2_SHARED sharing, changes in the mapping are visible
+    in another mapping
+    """
+    test_case = "test_map_sharing_shared"
+    with_size = False
+
+
+class TEST25(PMEM2_MAP):
+    """
+    map a file with PMEM2_PRIVATE sharing, changes in the mapping are not
+    visible in another mapping
+    """
+    test_case = "test_map_sharing_private"
+    with_size = False
+
+
+class TEST26(PMEM2_MAP):
+    """
+    map a file with PMEM2_PRIVATE sharing, changes in the mapping are not
+    visible in another mapping, fd is reopened before each mapping
+    """
+    test_case = "test_map_sharing_private_with_reopened_fd"
+    with_size = False
+
+
+class TEST27(PMEM2_MAP):
+    """
+    map O_RDONLY file with PMEM2_PRIVATE sharing
+    """
+    test_case = "test_map_sharing_private_rdonly_file"
+    with_size = False
+
+
+class TEST28(PMEM2_MAP_DEVDAX):
+    """DevDax file with PMEM2_PRIVATE sharing"""
+    test_case = "test_map_sharing_private_devdax"
+    with_size = False

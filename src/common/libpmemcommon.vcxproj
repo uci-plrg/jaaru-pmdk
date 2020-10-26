@@ -13,8 +13,8 @@
   <ItemGroup>
     <ClCompile Include="..\libpmem2\auto_flush_windows.c" />
     <ClCompile Include="..\libpmem2\usc_windows.c" />
-    <ClCompile Include="badblock_none.c" />
-    <ClCompile Include="badblock.c" />
+    <ClCompile Include="bad_blocks.c" />
+    <ClCompile Include="set_badblocks.c" />
     <ClCompile Include="ctl.c" />
     <ClCompile Include="ctl_cow.c" />
     <ClCompile Include="ctl_prefault.c" />
@@ -25,13 +25,15 @@
     <ClCompile Include="mmap.c" />
     <ClCompile Include="mmap_windows.c" />
     <ClCompile Include="os_deep_windows.c" />
-    <ClCompile Include="os_dimm_windows.c" />
     <ClCompile Include="pool_hdr.c" />
+    <ClCompile Include="rand.c" />
     <ClCompile Include="set.c" />
     <ClCompile Include="shutdown_state.c" />
     <ClCompile Include="uuid.c" />
     <ClCompile Include="uuid_windows.c" />
     <ClCompile Include="..\libpmem2\config.c" />
+    <ClCompile Include="..\libpmem2\badblocks.c" />
+    <ClCompile Include="..\libpmem2\badblocks_none.c" />
     <ClCompile Include="..\libpmem2\source.c" />
     <ClCompile Include="..\libpmem2\source_windows.c" />
     <ClCompile Include="..\libpmem2\pmem2_utils.c" />
@@ -42,8 +44,8 @@
     <ClInclude Include="..\libpmem2\auto_flush_windows.h" />
     <ClInclude Include="ctl.h" />
     <ClInclude Include="ctl_global.h" />
-    <ClInclude Include="os_badblock.h" />
-    <ClInclude Include="badblock.h" />
+    <ClInclude Include="badblocks.h" />
+    <ClInclude Include="set_badblocks.h" />
     <ClInclude Include="dlsym.h" />
     <ClInclude Include="file.h" />
     <ClInclude Include="mmap.h" />
@@ -65,7 +67,7 @@
     <ProjectGuid>{492BAA3D-0D5D-478E-9765-500463AE69AA}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>libpmemcommon</RootNamespace>
-    <WindowsTargetPlatformVersion>10.0.16299.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0.17134.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">

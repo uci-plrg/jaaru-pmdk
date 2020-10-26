@@ -14,6 +14,27 @@ import futils
 
 
 class Granularity(metaclass=ctx.CtxType):
+    """
+    Represents file system granularity context element.
+
+    Attributes:
+        gran_detecto_arg (str): argument of gran_detecto tool
+            that checks test directory for this granularity
+            type compliance
+        config_dir_field (str): name of the field in testconfig
+            that represents the test directory with this
+            granularity type
+        config_force_field (str): name of the field in testconfig
+            that represent the 'force' argument for this
+            granularity type
+        force_env (str): value of PMEM2_FORCE_GRANULARITY environment
+            variable for this granularity type
+        pmem_force_env (str): value for legacy PMEM_IS_PMEM_FORCE
+            environment variable that corresponds to this granularity
+            type
+
+    """
+
     gran_detecto_arg = None
     config_dir_field = None
     config_force_field = None
@@ -71,8 +92,18 @@ class Granularity(metaclass=ctx.CtxType):
     @classmethod
     def filter(cls, config, msg, tc):
         """
-        Acquire file system granularity for the test to be run
-        based on configuration and test requirements
+        Initialize granularity classes for the test to be run
+        based on configuration and test requirements.
+
+        Args:
+            config: configuration as returned by Configurator class
+            msg (Message): level based logger class instance
+            tc (BaseTest): test case, from which the granularity
+                requirements are obtained
+
+        Returns:
+            list of granularities on which the test should be run
+
         """
         req_gran, kwargs = ctx.get_requirement(tc, 'granularity', None)
 
@@ -88,8 +119,8 @@ class Granularity(metaclass=ctx.CtxType):
             tmp_req_gran = [Byte, CacheLine]
         elif req_gran == _PAGE_OR_LESS:
             tmp_req_gran = [Byte, CacheLine, Page]
-        elif req_gran == ctx.Any:
-            tmp_req_gran = [ctx.Any.get(conf_defined), ]
+        elif req_gran == [ctx.Any, ]:
+            tmp_req_gran = ctx.Any.get(conf_defined)
         else:
             tmp_req_gran = req_gran
 
@@ -176,9 +207,9 @@ _PAGE_OR_LESS = 'page_or_less'
 
 @unique
 class _Granularity(Enum):
-    PAGE = [Page, ]
-    CACHELINE = [CacheLine, ]
-    BYTE = [Byte, ]
+    PAGE = Page
+    CACHELINE = CacheLine
+    BYTE = Byte
     CL_OR_LESS = _CACHELINE_OR_LESS
     PAGE_OR_LESS = _PAGE_OR_LESS
     ANY = ctx.Any
@@ -192,13 +223,16 @@ PAGE_OR_LESS = _Granularity.PAGE_OR_LESS
 ANY = _Granularity.ANY
 
 
-def require_granularity(granularity, **kwargs):
-    if not isinstance(granularity, _Granularity):
-        raise ValueError('selected granularity {} is invalid'
-                         .format(granularity))
+def require_granularity(*granularity, **kwargs):
+    for g in granularity:
+        if not isinstance(g, _Granularity):
+            raise ValueError('selected granularity {} is invalid'
+                             .format(g))
+
+    enum_values = [g.value for g in granularity]
 
     def wrapped(tc):
-        ctx.add_requirement(tc, 'granularity', granularity.value, **kwargs)
+        ctx.add_requirement(tc, 'granularity', enum_values, **kwargs)
         return tc
     return wrapped
 

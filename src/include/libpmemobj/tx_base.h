@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: BSD-3-Clause
+/* SPDX-License-Identifier: BSD-3-Clause */
 /* Copyright 2014-2020, Intel Corporation */
 
 /*
@@ -48,6 +48,11 @@ enum pobj_tx_param {
 enum pobj_log_type {
 	TX_LOG_TYPE_SNAPSHOT,
 	TX_LOG_TYPE_INTENT,
+};
+
+enum pobj_tx_failure_behavior {
+	POBJ_TX_FAILURE_ABORT,
+	POBJ_TX_FAILURE_RETURN,
 };
 
 #if !defined(pmdk_use_attr_deprec_with_msg) && defined(__COVERITY__)
@@ -423,6 +428,20 @@ void pmemobj_tx_set_user_data(void *data);
  * transaction.
  */
 void *pmemobj_tx_get_user_data(void);
+
+/*
+ * Sets the failure behavior of transactional functions.
+ *
+ * This function must be called during TX_STAGE_WORK.
+ */
+void pmemobj_tx_set_failure_behavior(enum pobj_tx_failure_behavior behavior);
+
+/*
+ * Returns failure behavior for the current transaction.
+ *
+ * This function must be called during TX_STAGE_WORK.
+ */
+enum pobj_tx_failure_behavior pmemobj_tx_get_failure_behavior(void);
 
 #ifdef __cplusplus
 }

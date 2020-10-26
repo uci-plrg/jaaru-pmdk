@@ -12,6 +12,8 @@ require_test_type medium
 
 require_fs_type non-pmem
 
+exclude_ppc64
+
 setup
 
 export TEST_LOG_LEVEL=4

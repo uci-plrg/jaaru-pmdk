@@ -6,30 +6,18 @@
  */
 
 #include "libpmem2.h"
+#include "out.h"
 
-#ifndef _WIN32
 int
 pmem2_source_device_id(const struct pmem2_source *src, char *id, size_t *len)
 {
+	ERR("Cannot read device id - ndctl is not available");
 	return PMEM2_E_NOSUPP;
 }
-#else
-int
-pmem2_source_device_idW(const struct pmem2_source *src,
-	wchar_t *id, size_t *len)
-{
-	return PMEM2_E_NOSUPP;
-}
-
-int
-pmem2_source_device_idU(const struct pmem2_source *src, char *id, size_t *len)
-{
-	return PMEM2_E_NOSUPP;
-}
-#endif
 
 int
 pmem2_source_device_usc(const struct pmem2_source *src, uint64_t *usc)
 {
+	ERR("Cannot read device usc - ndctl is not available");
 	return PMEM2_E_NOSUPP;
 }

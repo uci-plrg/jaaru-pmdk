@@ -11,10 +11,10 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="badblock_none.c">
+    <ClCompile Include="bad_blocks.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="badblock.c">
+    <ClCompile Include="set_badblocks.c">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="file.c">
@@ -47,9 +47,6 @@
     <ClCompile Include="os_deep_windows.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="os_dimm_windows.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="ctl.c">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -66,6 +63,12 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\libpmem2\config.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\libpmem2\badblocks.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\libpmem2\badblocks_none.c">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\libpmem2\source.c">
@@ -86,6 +89,9 @@
     <ClCompile Include="..\libpmem2\usc_windows.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="rand.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ctl.h">
@@ -94,7 +100,7 @@
     <ClInclude Include="ctl_global.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="badblock.h">
+    <ClInclude Include="set_badblocks.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="dlsym.h">
@@ -106,7 +112,7 @@
     <ClInclude Include="mmap.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="os_badblock.h">
+    <ClInclude Include="badblocks.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="os_deep.h">

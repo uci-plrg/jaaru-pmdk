@@ -7,6 +7,7 @@
 
 #include "unittest.h"
 #include "memcpy_common.h"
+#include "valgrind_internal.h"
 
 /*
  * do_memcpy: Worker function for memcpy
@@ -28,6 +29,7 @@ do_memcpy(int fd, char *dest, int dest_off, char *src, int src_off,
 
 	memset(buf, 0, bytes);
 	memset(dest, 0, bytes);
+	persist(dest, bytes);
 	memset(src, 0, bytes);
 	persist(src, bytes);
 
@@ -47,6 +49,8 @@ do_memcpy(int fd, char *dest, int dest_off, char *src, int src_off,
 	UT_ASSERTeq(*(char *)(dest + dest_off), 0);
 
 	ret = fn(dest + dest_off, src + src_off, bytes / 2, flags);
+	if (flags & PMEM2_F_MEM_NOFLUSH)
+		VALGRIND_DO_PERSIST((dest + dest_off), bytes / 2);
 	UT_ASSERTeq(ret, dest + dest_off);
 
 	/* memcmp will validate that what I expect in memory. */
@@ -55,7 +59,7 @@ do_memcpy(int fd, char *dest, int dest_off, char *src, int src_off,
 			file_name, bytes / 2);
 
 	/* Now validate the contents of the file */
-	LSEEK(fd, (os_off_t)(dest_off + (int)(mapped_len / 2)), SEEK_SET);
+	LSEEK(fd, dest_off + (os_off_t)(mapped_len) / 2, SEEK_SET);
 	if (READ(fd, buf, bytes / 2) == bytes / 2) {
 		if (memcmp(src + src_off, buf, bytes / 2))
 			UT_FATAL("%s: first %zu bytes do not match",

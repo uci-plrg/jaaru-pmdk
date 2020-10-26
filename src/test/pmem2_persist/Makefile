@@ -13,10 +13,18 @@ INCS += -I$(TOP)/src/libpmem2
 
 TARGET = pmem2_persist
 
-OBJS += alloc.o\
-	pmem2_persist.o\
+LIBPMEMCORE=internal-debug
+OBJS += pmem2_persist.o\
 	persist.o\
-	util.o\
-	memops_generic.o
+	memops_generic.o\
+	deep_flush_linux.o\
+	pmem2_utils_linux.o
+
+ifeq ($(OS_DIMM),ndctl)
+LINK_NDCTL=y
+OBJS += region_namespace_ndctl.o
+else
+OBJS += region_namespace_none.o
+endif
 
 include ../Makefile.inc

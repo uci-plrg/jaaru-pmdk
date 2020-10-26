@@ -5,6 +5,7 @@
  * pmem2_perror.c -- pmem2_perror unittests
  */
 
+#include "libpmem2.h"
 #include "unittest.h"
 #include "out.h"
 #include "config.h"
@@ -84,7 +85,7 @@ test_fail_system_func_format(const struct test_case *tc, int argc, char *argv[])
 
 /*
  * test_fail_pmem2_syscall_simple - check print message when system func
- * fails through pmem2_source_file_size func
+ * fails through pmem2_source_size func
  */
 static int
 test_fail_pmem2_syscall_simple(const struct test_case *tc,
@@ -94,13 +95,15 @@ test_fail_pmem2_syscall_simple(const struct test_case *tc,
 	size_t size;
 
 #ifdef _WIN32
-	src.handle = INVALID_HANDLE_VALUE;
+	src.type = PMEM2_SOURCE_HANDLE;
+	src.value.handle = INVALID_HANDLE_VALUE;
 #else
-	src.fd = -1;
+	src.type = PMEM2_SOURCE_FD;
+	src.value.fd = -1;
 #endif
 
 	/* "randomly" chosen function to be failed */
-	int ret = pmem2_source_file_size(&src, &size);
+	int ret = pmem2_source_size(&src, &size);
 	ASSERTne(ret, 0);
 
 	pmem2_perror("test");
@@ -110,7 +113,7 @@ test_fail_pmem2_syscall_simple(const struct test_case *tc,
 
 /*
  * test_fail_pmem2_syscall_simple - check print message when system func
- * fails through pmem2_source_file_size func and ellipsis operator is used
+ * fails through pmem2_source_size func and ellipsis operator is used
  */
 static int
 test_fail_pmem2_syscall_format(const struct test_case *tc,
@@ -120,16 +123,38 @@ test_fail_pmem2_syscall_format(const struct test_case *tc,
 	size_t size;
 
 #ifdef _WIN32
-	src.handle = INVALID_HANDLE_VALUE;
+	src.type = PMEM2_SOURCE_HANDLE;
+	src.value.handle = INVALID_HANDLE_VALUE;
 #else
-	src.fd = -1;
+	src.type = PMEM2_SOURCE_FD;
+	src.value.fd = -1;
 #endif
 
 	/* "randomly" chosen function to be failed */
-	int ret = pmem2_source_file_size(&src, &size);
+	int ret = pmem2_source_size(&src, &size);
 	ASSERTne(ret, 0);
 
 	pmem2_perror("test %d", 123);
+
+	return 0;
+}
+
+/*
+ * test_simple_err_to_errno_check - check if conversion
+ * from pmem2 err value to errno works fine
+ */
+static int
+test_simple_err_to_errno_check(const struct test_case *tc,
+		int argc, char *argv[])
+{
+	int ret_errno = pmem2_err_to_errno(PMEM2_E_NOSUPP);
+	UT_ASSERTeq(ret_errno, ENOTSUP);
+
+	ret_errno = pmem2_err_to_errno(PMEM2_E_UNKNOWN);
+	UT_ASSERTeq(ret_errno, EINVAL);
+
+	ret_errno = pmem2_err_to_errno(-ENOTSUP);
+	UT_ASSERTeq(ret_errno, ENOTSUP);
 
 	return 0;
 }
@@ -144,6 +169,7 @@ static struct test_case test_cases[] = {
 	TEST_CASE(test_fail_system_func_format),
 	TEST_CASE(test_fail_pmem2_syscall_simple),
 	TEST_CASE(test_fail_pmem2_syscall_format),
+	TEST_CASE(test_simple_err_to_errno_check),
 };
 
 #define NTESTS (sizeof(test_cases) / sizeof(test_cases[0]))

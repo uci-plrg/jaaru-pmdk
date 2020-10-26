@@ -15,7 +15,7 @@
     <ClCompile Include="..\..\src\libpmemblk\btt.c" />
     <ClCompile Include="..\..\src\libpmemblk\libpmemblk.c" />
     <ClCompile Include="..\core\alloc.c" />
-    <ClCompile Include="..\common\badblock.c" />
+    <ClCompile Include="..\common\set_badblocks.c" />
     <ClCompile Include="..\common\ctl.c" />
     <ClCompile Include="..\common\ctl_cow.c" />
     <ClCompile Include="..\common\ctl_prefault.c" />
@@ -26,9 +26,8 @@
     <ClCompile Include="..\common\mmap.c" />
     <ClCompile Include="..\common\mmap_windows.c" />
     <ClCompile Include="..\core\fs_windows.c" />
-    <ClCompile Include="..\common\badblock_none.c" />
+    <ClCompile Include="..\common\bad_blocks.c" />
     <ClCompile Include="..\common\os_deep_windows.c" />
-    <ClCompile Include="..\common\os_dimm_windows.c" />
     <ClCompile Include="..\core\os_thread_windows.c" />
     <ClCompile Include="..\core\os_windows.c" />
     <ClCompile Include="..\core\out.c" />
@@ -43,6 +42,8 @@
     <ClCompile Include="..\libpmem2\usc_windows.c" />
     <ClCompile Include="libpmemblk_main.c" />
     <ClCompile Include="..\libpmem2\config.c" />
+    <ClCompile Include="..\libpmem2\badblocks.c" />
+    <ClCompile Include="..\libpmem2\badblocks_none.c" />
     <ClCompile Include="..\libpmem2\source.c" />
     <ClCompile Include="..\libpmem2\source_windows.c" />
     <ClCompile Include="..\libpmem2\pmem2_utils.c" />
@@ -98,7 +99,7 @@
     <RootNamespace>libpmemblk</RootNamespace>
     <DefaultLanguage>en-US</DefaultLanguage>
     <MinimumVisualStudioVersion>14.0</MinimumVisualStudioVersion>
-    <WindowsTargetPlatformVersion>10.0.16299.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0.17134.0</WindowsTargetPlatformVersion>
     <WindowsTargetPlatformMinVersion>10.0.10240.0</WindowsTargetPlatformMinVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />

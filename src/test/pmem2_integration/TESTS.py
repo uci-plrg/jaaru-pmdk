@@ -194,3 +194,112 @@ class TEST20(PMEM2_INTEGRATION):
 class TEST21(PMEM2_INTEGRATION_DEV_DAXES):
     """test unaligned offset"""
     test_case = "test_offset_aligned"
+
+
+class TEST22(PMEM2_INTEGRATION):
+    """
+    map O_RDONLY file and test pmem2_[cpy|set|move]_fns with
+    PMEM2_PRIVATE sharing
+    """
+    test_case = "test_mem_move_cpy_set_with_map_private"
+
+
+class TEST23(PMEM2_INTEGRATION):
+    """test valid case of pmem2_deep_sflush"""
+    test_case = "test_deep_flush_valid"
+
+
+class TEST24(PMEM2_INTEGRATION):
+    """test deep flush with range out of map"""
+    test_case = "test_deep_flush_e_range_behind"
+
+
+class TEST25(PMEM2_INTEGRATION):
+    """test deep flush with range out of map"""
+    test_case = "test_deep_flush_e_range_before"
+
+
+class TEST26(PMEM2_INTEGRATION):
+    """test deep flush with part of map"""
+    test_case = "test_deep_flush_slice"
+
+
+class TEST27(PMEM2_INTEGRATION):
+    """test deep flush with overlaping part"""
+    test_case = "test_deep_flush_overlap"
+
+
+class TEST28(PMEM2_INTEGRATION):
+    """test for anonymous mappings"""
+    test_case = "test_source_anon_private"
+
+
+class TEST29(PMEM2_INTEGRATION):
+    """test for anonymous mappings"""
+    test_case = "test_source_anon_shared"
+
+
+class TEST30(PMEM2_INTEGRATION):
+    """test for anonymous mappings"""
+    test_case = "test_source_anon_page"
+
+
+class TEST31(PMEM2_INTEGRATION):
+    """test for anonymous mappings"""
+    test_case = "test_source_anon_too_small"
+
+
+class TEST32(PMEM2_INTEGRATION):
+    """test for anonymous mappings"""
+    test_case = "test_source_anon_zero_len"
+
+
+@t.windows_exclude
+class TEST33(PMEM2_INTEGRATION_DEV_DAXES):
+    """test valid case of pmem2_deep_sflush"""
+    test_case = "test_deep_flush_valid"
+
+
+@t.windows_exclude
+class TEST34(PMEM2_INTEGRATION_DEV_DAXES):
+    """test deep flush with range out of map"""
+    test_case = "test_deep_flush_e_range_behind"
+
+
+@t.windows_exclude
+class TEST35(PMEM2_INTEGRATION_DEV_DAXES):
+    """test deep flush with range out of map"""
+    test_case = "test_deep_flush_e_range_before"
+
+
+@t.windows_exclude
+class TEST36(PMEM2_INTEGRATION_DEV_DAXES):
+    """test deep flush with part of map"""
+    test_case = "test_deep_flush_slice"
+
+
+@t.windows_exclude
+class TEST37(PMEM2_INTEGRATION_DEV_DAXES):
+    """test deep flush with overlaping part"""
+    test_case = "test_deep_flush_overlap"
+
+
+class TEST38(PMEM2_INTEGRATION):
+    """test for unaligned persists"""
+    test_case = "test_unaligned_persist"
+
+
+class TEST39(PMEM2_INTEGRATION):
+    """compare normal map vs map_from_existing"""
+    test_case = "test_map_from_existing"
+
+
+class TES40(PMEM2_INTEGRATION):
+    """test map_from_existing from pmem2_mapping"""
+    test_case = "test_map_from_existing_map"
+
+
+@t.windows_exclude
+class TEST41(PMEM2_INTEGRATION_DEV_DAXES):
+    """compare normal map vs map_from_existing on devdax"""
+    test_case = "test_map_from_existing"

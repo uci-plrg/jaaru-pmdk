@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BSD-3-Clause
-/* Copyright 2015-2019, Intel Corporation */
+/* Copyright 2015-2020, Intel Corporation */
 
 /*
  * pmalloc.c -- implementation of pmalloc POSIX-like API
@@ -184,7 +184,7 @@ pmalloc_boot(PMEMobjpool *pop)
 		return ret;
 
 #if VG_MEMCHECK_ENABLED
-	if (On_valgrind)
+	if (On_memcheck)
 		palloc_heap_vg_open(&pop->heap, pop->vg_boot);
 #endif
 
@@ -305,7 +305,7 @@ CTL_WRITE_HANDLER(desc)(void *ctx,
 	}
 
 	p->class_id = c->id;
-	p->units_per_block = c->run.nallocs;
+	p->units_per_block = c->rdsc.nallocs;
 
 	return 0;
 }
@@ -382,11 +382,11 @@ CTL_READ_HANDLER(desc)(void *ctx,
 	}
 
 	struct pobj_alloc_class_desc *p = arg;
-	p->units_per_block = c->type == CLASS_HUGE ? 0 : c->run.nallocs;
+	p->units_per_block = c->type == CLASS_HUGE ? 0 : c->rdsc.nallocs;
 	p->header_type = user_htype;
 	p->unit_size = c->unit_size;
 	p->class_id = c->id;
-	p->alignment = c->flags & CHUNK_FLAG_ALIGNED ? c->run.alignment : 0;
+	p->alignment = c->flags & CHUNK_FLAG_ALIGNED ? c->rdsc.alignment : 0;
 
 	return 0;
 }

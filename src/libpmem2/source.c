@@ -9,41 +9,29 @@
 #include "pmem2_utils.h"
 
 int
-pmem2_source_from_anon(struct pmem2_source **src)
+pmem2_source_from_anon(struct pmem2_source **src, size_t size)
 {
-	return PMEM2_E_NOSUPP;
+	PMEM2_ERR_CLR();
+
+	int ret;
+	struct pmem2_source *srcp = pmem2_malloc(sizeof(**src), &ret);
+	if (ret)
+		return ret;
+
+	srcp->type = PMEM2_SOURCE_ANON;
+	srcp->value.size = size;
+
+	*src = srcp;
+
+	return 0;
 }
 
 int
 pmem2_source_delete(struct pmem2_source **src)
 {
+	/* we do not need to clear err because this function cannot fail */
+
 	Free(*src);
 	*src = NULL;
 	return 0;
-}
-
-int
-pmem2_badblock_iterator_new(const struct pmem2_source *src,
-	struct pmem2_badblock_iterator **pbb)
-{
-	return PMEM2_E_NOSUPP;
-}
-
-int
-pmem2_badblock_next(struct pmem2_badblock_iterator *pbb,
-	struct pmem2_badblock *bb)
-{
-	return PMEM2_E_NOSUPP;
-}
-
-void pmem2_badblock_iterator_delete(
-	struct pmem2_badblock_iterator **pbb)
-{
-}
-
-int
-pmem2_badblock_clear(const struct pmem2_source *src,
-	const struct pmem2_badblock *bb)
-{
-	return PMEM2_E_NOSUPP;
 }
