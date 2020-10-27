@@ -7,7 +7,7 @@
 
 PROGS = pmreorder_list
 
-LIBS = -lpmem -pthread
+LIBS = -pthread
 
 include ../Makefile.inc
 

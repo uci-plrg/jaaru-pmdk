@@ -7,7 +7,7 @@
 PROGS = manpage
 DIRS = logfile
 
-LIBS = -lpmemlog -lpmem -pthread
+LIBS = -lpmemlog -pthread
 
 include ../Makefile.inc
 

@@ -6,7 +6,7 @@
 #
 PROGS = obj_pmemlog obj_pmemlog_macros obj_pmemlog_minimal obj_pmemlog_simple
 
-LIBS = -lpmemobj -lpmem -pthread
+LIBS = -lpmemobj -pthread
 
 include ../../Makefile.inc
 

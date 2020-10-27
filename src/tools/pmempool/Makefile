@@ -16,7 +16,6 @@ OBJS = pmempool.o\
        create.o dump.o check.o rm.o convert.o synchronize.o transform.o\
        rpmem_ssh.o rpmem_cmd.o rpmem_util.o rpmem_common.o feature.o
 
-LIBPMEM=y
 LIBPMEMBLK=y
 LIBPMEMOBJ=y
 LIBPMEMLOG=y

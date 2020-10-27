@@ -6,7 +6,7 @@
 #
 PROGS = addlog printlog
 
-LIBS = -lpmemlog -lpmem -pthread
+LIBS = -lpmemlog -pthread
 
 include ../../Makefile.inc
 

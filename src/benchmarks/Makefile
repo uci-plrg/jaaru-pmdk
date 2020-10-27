@@ -84,7 +84,7 @@ LIBS += ../debug/libpmemcore.a
 LIBS += ../debug/libpmemcommon.a
 endif
 CFLAGS += $(LIBNDCTL_CFLAGS)
-LIBS += -lpmemobj -lpmemlog -lpmemblk -lpmempool -lpmem -pthread -lm \
+LIBS += -lpmemobj -lpmemlog -lpmemblk -lpmempool -pthread -lm \
 	$(LIBDL) $(LIBUUID) $(LIBNDCTL_LIBS)
 ifeq ($(LIBRT_NEEDED), y)
 LIBS += -lrt

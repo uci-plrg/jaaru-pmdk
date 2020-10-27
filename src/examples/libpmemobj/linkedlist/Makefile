@@ -5,7 +5,7 @@
 #
 PROGS = fifo
 
-LIBS = -lpmemobj -lpmem -pthread
+LIBS = -lpmemobj -pthread
 
 include ../../Makefile.inc
 

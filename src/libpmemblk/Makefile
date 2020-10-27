@@ -19,4 +19,4 @@ SOURCE +=\
 include ../Makefile.inc
 
 CFLAGS += $(LIBNDCTL_CFLAGS)
-LIBS += -pthread -lpmem $(LIBNDCTL_LIBS)
+LIBS += -pthread $(LIBNDCTL_LIBS)

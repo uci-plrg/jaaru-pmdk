@@ -7,7 +7,7 @@
 
 PROGS = manpage simple_copy full_copy
 
-LIBS = -lpmem -pthread
+LIBS = -pthread
 
 include ../Makefile.inc
 

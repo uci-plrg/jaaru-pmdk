@@ -7,7 +7,7 @@
 PROGS = manpage
 DIRS = assetdb
 
-LIBS = -lpmemblk -lpmem -pthread
+LIBS = -lpmemblk -pthread
 
 include ../Makefile.inc
 

@@ -6,7 +6,7 @@
 #
 PROGS = asset_load asset_list asset_checkout asset_checkin
 
-LIBS = -lpmemblk -lpmem -pthread
+LIBS = -lpmemblk -pthread
 
 include ../../Makefile.inc
 
