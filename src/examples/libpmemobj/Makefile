@@ -4,7 +4,7 @@
 #
 # examples/libpmemobj/Makefile -- build the libpmemobj examples
 #
-PROGS = manpage btree pi lists setjmp buffons_needle_problem testit
+PROGS = manpage btree pi lists setjmp buffons_needle_problem
 DIRS = pminvaders pmemlog pmemblk string_store string_store_tx\
 	string_store_tx_type hashmap tree_map pmemobjfs map libart array\
 	linkedlist list_map slab_allocator queue
