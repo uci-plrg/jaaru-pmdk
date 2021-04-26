@@ -28,6 +28,8 @@
 #include "tx.h"
 #include "sys_util.h"
 
+void jaaru_file_permission_change();
+
 /*
  * The variable from which the config is directly loaded. The string
  * cannot contain any comments or extraneous white characters.
@@ -1393,7 +1395,7 @@ pmemobj_createU(const char *path, const char *layout,
 
 	if (util_poolset_chmod(set, mode))
 		goto err;
-
+	jaaru_file_permission_change();
 	util_poolset_fdclose(set);
 
 	LOG(3, "pop %p", pop);
