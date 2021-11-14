@@ -359,6 +359,9 @@ ulog_store(struct ulog *dest, struct ulog *src, size_t nbytes,
 		SIZEOF_ULOG(base_nbytes),
 		PMEMOBJ_F_MEM_WC);
 
+#ifdef VERIFYFIX
+	pmemops_persist(p_ops, dest, SIZEOF_ULOG(base_nbytes));
+#endif
 	src->capacity = old_capacity;
 }
 
@@ -553,6 +556,10 @@ ulog_entry_apply(const struct ulog_entry_base *e, int persist,
 			*dst |= ev->value;
 			f(p_ops->base, dst, sizeof(uint64_t),
 				PMEMOBJ_F_RELAXED);
+#ifdef VERIFYFIX
+			p_ops->persist(p_ops->base, dst, dst_size,
+				~PMEMOBJ_F_MEM_NODRAIN & ~PMEMOBJ_F_MEM_NOFLUSH);
+#endif
 		break;
 		case ULOG_OPERATION_SET:
 			ev = (struct ulog_entry_val *)e;
@@ -577,6 +584,10 @@ ulog_entry_apply(const struct ulog_entry_base *e, int persist,
 			VALGRIND_ADD_TO_TX(dst, dst_size);
 			pmemops_memcpy(p_ops, dst, eb->data, eb->size,
 				PMEMOBJ_F_RELAXED | PMEMOBJ_F_MEM_NODRAIN);
+#ifdef VERIFYFIX
+			p_ops->persist(p_ops->base, dst, dst_size,
+				~PMEMOBJ_F_MEM_NODRAIN & ~PMEMOBJ_F_MEM_NOFLUSH);
+#endif
 		break;
 		default:
 			ASSERT(0);
@@ -701,6 +712,9 @@ ulog_clobber(struct ulog *dest, struct ulog_next *next,
 
 	pmemops_memcpy(p_ops, dest, &empty, sizeof(empty),
 		PMEMOBJ_F_MEM_WC);
+#ifdef VERIFYFIX
+	 p_ops->persist((void*)p_ops, dest, sizeof(empty), ~PMEMOBJ_F_MEM_NOFLUSH & ~PMEMOBJ_F_MEM_NODRAIN);
+#endif
 }
 
 /*

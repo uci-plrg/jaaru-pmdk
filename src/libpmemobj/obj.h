@@ -26,7 +26,7 @@ extern "C" {
 
 #include "alloc.h"
 #include "fault_injection.h"
-
+#define VERIFYFIX
 #define PMEMOBJ_LOG_PREFIX "libpmemobj"
 #define PMEMOBJ_LOG_LEVEL_VAR "PMEMOBJ_LOG_LEVEL"
 #define PMEMOBJ_LOG_FILE_VAR "PMEMOBJ_LOG_FILE"

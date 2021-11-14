@@ -421,9 +421,12 @@ obj_norep_memcpy(void *ctx, void *dest, const void *src, size_t len,
 	PMEMobjpool *pop = ctx;
 	LOG(15, "pop %p dest %p src %p len %zu flags 0x%x", pop, dest, src, len,
 			flags);
-
-	return pop->memcpy_local(dest, src, len,
+	void * ptr = pop->memcpy_local(dest, src, len,
 					flags & PMEM_F_MEM_VALID_FLAGS);
+#ifdef VERIFYFIX
+	pop->persist_local(dest, len);
+#endif	
+	return ptr;
 }
 
 /*
