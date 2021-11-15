@@ -712,9 +712,6 @@ ulog_clobber(struct ulog *dest, struct ulog_next *next,
 
 	pmemops_memcpy(p_ops, dest, &empty, sizeof(empty),
 		PMEMOBJ_F_MEM_WC);
-#ifdef VERIFYFIX
-	 p_ops->persist((void*)p_ops, dest, sizeof(empty), ~PMEMOBJ_F_MEM_NOFLUSH & ~PMEMOBJ_F_MEM_NODRAIN);
-#endif
 }
 
 /*
